@@ -1,0 +1,24 @@
+Received: from dispatch-node.notification-system.org (dispatch-node.notification-system.org. [198.51.100.12])
+        by mx.recipient-corp.com with ESMTPS id p88si992812qkc.14.2026.09.06.14.00.00
+        for <user@recipient-corp.com>;
+        Sun, 06 Sep 2026 14:00:00 -0400
+From: "PayPal Account Security" <service@secure-notification-system.org>
+To: user@recipient-corp.com
+Subject: Suspicious Login Attempt Detected - Please Confirm Your Identity
+Date: Sun, 06 Sep 2026 14:00:00 -0400
+Message-ID: <sec-alert-88291@notification-system.org>
+Reply-To: security-team@gmail.com
+MIME-Version: 1.0
+Content-Type: text/html; charset="utf-8"
+
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: sans-serif; color: #333;">
+  <p>Dear Customer,</p>
+  <p>We detected an unrecognized device attempting to access your PayPal wallet from an unknown location.</p>
+  <p>If this was not you, please secure your account immediately and confirm your login password and authorization PIN:</p>
+  <p><a href="https://раypal.com/security/signin?ref=account_hold">https://paypal.com/security/signin</a></p>
+  <p>Sincerely,<br>PayPal Security & Risk Management</p>
+</body>
+</html>

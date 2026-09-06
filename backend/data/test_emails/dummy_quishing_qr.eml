@@ -1,0 +1,71 @@
+Subject: Mandatory KYC Re-validation Required
+From: "State Bank Support" <support@sbi-verifyportal.net>
+To: customer@example.com
+Date: Sun, 06 Sep 2026 11:30:00 +0530
+Message-ID: <sbi-kyc-20260906@sbi-verifyportal.net>
+Reply-To: hacker-mailbox@gmail.com
+X-Mailer: SendBlaster 4.3
+Received: from mail-gw.sbi-verifyportal.net (mail-gw.sbi-verifyportal.net.
+ [198.51.100.77]) by mx.victim-domain.com with ESMTPS id kyc99283; Sun, 06 Sep
+ 2026 11:30:05 +0530
+MIME-Version: 1.0
+Content-Type: multipart/alternative;
+ boundary="===============7217442881982638552=="
+
+--===============7217442881982638552==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+Dear Customer, Please scan the attached QR code to verify your KYC details im=
+mediately.
+
+--===============7217442881982638552==
+MIME-Version: 1.0
+Content-Type: multipart/related;
+ boundary="===============4187035227675562539=="
+
+--===============4187035227675562539==
+Content-Type: text/html; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+<!DOCTYPE html>
+<html>
+<body>
+  <p>Dear Valued Customer,</p>
+  <p>As per revised banking directives, your account profile requires mandato=
+ry KYC re-validation.</p>
+  <p>Please scan the secure QR code below using your mobile phone camera to c=
+omplete authentication:</p>
+  <p><img src=3D"cid:kyc_qr_code" alt=3D"SBI KYC QR Code" width=3D"200" heigh=
+t=3D"200" /></p>
+  <p>Failure to complete verification within 24 hours may lead to temporary r=
+estriction on outgoing UPI and NetBanking.</p>
+  <p>Regards,<br>Customer Care & Compliance Services</p>
+</body>
+</html>
+
+--===============4187035227675562539==
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="kyc_qr_code.png"
+Content-ID: <kyc_qr_code>
+MIME-Version: 1.0
+
+iVBORw0KGgoAAAANSUhEUgAAAXIAAAFyAQAAAADAX2ykAAAC4UlEQVR4nO1bUY6jMAy1DdJ8UmkO
+MEehN5gj7dXIUeYAK5HPSiCv7CTQYVchSB0Ei98HJfipsuLasY2LDFvgaBMdwPh50Ip8CePnQSvy
+JYyfB63IlzB+HrQiX8L4V9gfjKgBHNZhCU4u4JPsvqM+5aAN3AvzWxb06WnLAwA0LMlXpSI+tv7F
+oIvyffLQVo3sa7mO4Vlw7H31KQUVM6/Jr//1kMGLpb/eGPRuR33I+D+7P+7jkbz2BhBP3Rd+/wpo
+jbCA8cv8t5ED1gMgNOK/MIhgRPXk5xaI7WcedEy+0xT5FqMy3v0bQ9tXjHc5hDWd3lWfYlA59cL+
+y9OawY8I0AzAEqmjY++nDxn/pfsDofiRgog7qFirImapj9oegDux9IzO9j8POhgfot2aqeAN9lWb
+c6x/OxFoiWz2PaV9Qe86vYilgy0b8enQ5Jh+B0fTn4yfBwf00U1DE0ubHG1fJf81+54+PnNImOfj
+OPUnv/v00fQn45f5L0SDqtcGW4I+k/wqGd7se9b8uZ+W/beYHaDhWm7Mf89pX0gZ8hyV9ehNkToV
+SWbfk74f7OXqY5vqKZN2t5hf7atPMaicevXzl0NBNL8O5ufSyOLzmec37vrhpfUsN0460Q7rWP+6
+m/Qsd9SnHLSBe+X+s9dXRxKl5eI+pyUAYNuPe+lDxv+Z/Ll6qn81dU79ydjpsPzqxL9Pjr3IQSL1
+iOA+JGuGEZOR46TOUfUvB10yPmNcVQNLVYQA9QDg3xnBvw9SH9V8TP3J+JvmJ1Fm6bhrHjj3r3Tc
+zvz3v5ifZDXyr696SqIxvO7fWZ9SUDHzmvx6sca2e6B0NQZoWeevxMrziMfR9Cfjb9of7nT0OThs
+xXjXduVUGNt+nnx+EtynjE76egCXZmMZ4IHmv2e2rwsZdJXmY/0NWfob+hih+b2XPmT8l+4P2v+7
+s6C8+C8YPw9akS9h/DxoRb6E8fOgFfkSxs+DVuRwcf4fvn3LA5BQgeYAAAAASUVORK5CYII=
+
+--===============4187035227675562539==--
+
+--===============7217442881982638552==--
