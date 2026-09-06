@@ -16,6 +16,7 @@ import io
 import re
 import idna
 import email
+import base64
 import logging
 import threading
 import Levenshtein
@@ -130,9 +131,35 @@ def check_homoglyph(domain: str) -> dict:
         return {"visible_domain": domain, "decoded_ascii": domain, "suspicious": False}
 
 
+def _extract_sld(domain: str) -> str:
+    """
+    Extracts the second-level domain (SLD) from a full domain/hostname for comparison.
+    Uses a simple public suffix heuristic:
+      - 'mail.hdfcbank.com'  -> 'hdfcbank'
+      - 'hdfcbank.co.in'     -> 'hdfcbank'
+      - 'hdfcbonk.com'       -> 'hdfcbonk'
+    Falls back to first label if pattern is not matched.
+    """
+    try:
+        import tldextract
+        return tldextract.extract(domain).domain.lower()
+    except ImportError:
+        pass
+    # Fallback: strip www, take second-to-last label if multi-part TLD
+    labels = domain.lower().lstrip("www.").split(".")
+    if len(labels) >= 2:
+        # Handle two-part TLDs like co.in, com.au, org.uk
+        if labels[-1] in ("in", "uk", "au", "br", "jp") and len(labels) >= 3:
+            return labels[-3]
+        return labels[-2]
+    return labels[0] if labels else domain
+
+
 def check_lookalike(domain: str) -> list:
     """
-    Levenshtein-distance lookalike check.
+    Levenshtein-distance lookalike check using SLD-only comparison.
+    This catches TLD swaps: hdfcbank.co.in vs hdfcbank.com (same SLD).
+    Also catches suffix injection: hdfcbank-secure.com vs hdfcbank.com.
     Guard: domains shorter than 6 chars produce too many false positives.
     """
     matches = []
@@ -144,13 +171,29 @@ def check_lookalike(domain: str) -> list:
     if len(base_domain) < 6:
         return []
 
+    sld_input = _extract_sld(base_domain)
+
     for legit in KNOWN_LEGITIMATE_DOMAINS:
         if base_domain == legit:
-            continue
-        distance = Levenshtein.distance(base_domain, legit)
-        if 0 < distance <= 2:
+            continue  # Exact match is not a lookalike
+
+        sld_legit = _extract_sld(legit)
+
+        # 1. Levenshtein on SLD only (catches typos AND TLD swaps)
+        if sld_input != sld_legit and 0 < Levenshtein.distance(sld_input, sld_legit) <= 2:
             matches.append(legit)
-    return matches
+            continue
+
+        # 2. Brand-as-substring check: if a known brand SLD is entirely contained
+        #    within the input SLD (e.g. 'hdfcbank' in 'hdfcbank-secure'), it’s a lookalike.
+        if (
+            len(sld_legit) >= 5  # avoid short noise like 'sbi'
+            and sld_legit in sld_input
+            and sld_input != sld_legit
+        ):
+            matches.append(legit)
+
+    return list(set(matches))
 
 
 # ---------------------------------------------------------------------------
@@ -210,13 +253,30 @@ def detect_url_shorteners(links: list) -> list:
 
 def detect_credential_harvesting(text: str) -> bool:
     """
-    Checks for combinations of credential-harvesting keyword pairs.
-    More keyword combinations = higher confidence.
-    Threshold: 2 or more distinct keywords → suspicious.
+    Detects credential-harvesting intent using REGEX PHRASE PAIRS that require
+    a credential term AND an action term within the same sentence/clause.
+    This avoids false positives like "You do NOT need to enter your password".
+
+    Patterns: <action> ... <credential> within 80 chars of each other.
+    Threshold: 2 or more distinct phrase patterns matched -> suspicious.
     """
     text_lower = text.lower()
-    matches = sum(1 for kw in HARVESTING_KEYWORDS if kw in text_lower)
-    return matches >= 2
+
+    # Regex phrase patterns: must match action + credential in context
+    HARVEST_PATTERNS = [
+        r"(enter|provide|submit|type|input|share)\b.{0,80}\b(password|otp|pin|cvv|card number)",
+        r"(verify|confirm|validate|authenticate)\b.{0,80}\b(account|identity|detail|credential)",
+        r"(click|tap)\b.{0,80}\b(verify|confirm|login|sign.?in|authenticate)",
+        r"(login|sign.?in)\b.{0,80}\b(to (access|continue|update|confirm))",
+        r"(account|banking|card)\b.{0,80}\b(suspend|block|expi|terminat)",
+        r"(update|re-?enter|re-?verify)\b.{0,80}\b(detail|info|credential|data)",
+    ]
+
+    matched = sum(
+        1 for pattern in HARVEST_PATTERNS
+        if re.search(pattern, text_lower, re.DOTALL)
+    )
+    return matched >= 2
 
 
 # ---------------------------------------------------------------------------
@@ -225,8 +285,11 @@ def detect_credential_harvesting(text: str) -> bool:
 
 def extract_email_payloads(raw_or_msg):
     """
-    Extracts plain text body, HTML body, and attached image bytes from
-    an RFC 2822 email message or raw bytes.
+    Extracts plain text body, HTML body, and image bytes from an RFC 2822
+    email message or raw bytes.
+
+    Captures BOTH multipart attachments AND inline base64-encoded images
+    embedded in HTML bodies (common in quishing attacks).
     """
     if isinstance(raw_or_msg, (bytes, bytearray)):
         msg = email.message_from_bytes(bytes(raw_or_msg))
@@ -267,6 +330,23 @@ def extract_email_payloads(raw_or_msg):
                 html_body = decoded
             else:
                 body_text = decoded
+
+    # Extract inline base64 images from HTML body
+    # Quishing attacks often embed QR codes as <img src="data:image/png;base64,...">
+    # These are NOT multipart attachments and would be missed by the loop above.
+    if html_body:
+        soup = BeautifulSoup(html_body, "html.parser")
+        for img_tag in soup.find_all("img", src=True):
+            src = img_tag["src"]
+            if src.startswith("data:image/") and ";base64," in src:
+                try:
+                    b64_data = src.split(";base64,", 1)[1]
+                    img_bytes = base64.b64decode(b64_data)
+                    if len(img_bytes) > 100:  # Skip trivially small images
+                        attached_images.append(img_bytes)
+                        logger.debug("Extracted inline base64 image (%d bytes) for QR scanning", len(img_bytes))
+                except Exception as e:
+                    logger.debug("Could not decode inline base64 image: %s", e)
 
     return body_text, html_body, attached_images
 
@@ -356,9 +436,12 @@ def analyze_content(
         impersonation_score = 0.5
 
     classifier = _get_classifier()
-    # Extend NLP window to 2048 chars to capture buried phishing language
+    # Extend NLP window: first 3072 + last 1024 chars to catch buried phishing CTAs
     if classifier and full_text.strip():
-        text_to_classify = full_text[:2048]
+        if len(full_text) > 4096:
+            text_to_classify = full_text[:3072] + " " + full_text[-1024:]
+        else:
+            text_to_classify = full_text
         try:
             u_res = classifier(
                 text_to_classify,

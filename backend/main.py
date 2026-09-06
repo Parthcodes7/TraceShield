@@ -41,6 +41,7 @@ from modules.content_analysis import analyze_content, PYZBAR_AVAILABLE, is_class
 from modules.geolocation import geolocate_ip, CITY_DB_PATH, ASN_DB_PATH
 from modules.fusion_scoring import compute_risk_score, run_fusion
 from modules.report_generator import generate_report_pdf
+from modules.adversarial_test import generate_adversarial_sample, run_self_test
 
 # ---------------------------------------------------------------------------
 # Logging Configuration — Structured logging for all modules
@@ -58,6 +59,9 @@ logger = logging.getLogger("traceshield.main")
 # ---------------------------------------------------------------------------
 
 DB_PATH = os.path.join(os.path.dirname(__file__), "data", "history.db")
+
+# Maximum allowable email upload size — prevents DoS via large file bombs
+MAX_EMAIL_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
 
 _db_initialized = False
@@ -243,6 +247,12 @@ class RawEmailInput(BaseModel):
     raw_email: str = Field(..., description="Full raw RFC 2822 email content or MIME text")
 
 
+class AdversarialRunRequest(BaseModel):
+    strategy: str = Field("business_routine", description="business_routine | it_compliance | quishing_statement")
+    custom_email: Optional[str] = Field(None, description="Optional raw email string to test directly")
+    custom_prompt: Optional[str] = Field(None, description="Optional custom prompt for LLM generation")
+
+
 # ---------------------------------------------------------------------------
 # Core Pipeline Orchestrator — runs in threadpool (not async) to avoid blocking
 # ---------------------------------------------------------------------------
@@ -391,6 +401,12 @@ async def analyze_email_auto(
             detail="No email content provided. Upload a .eml file or send JSON {raw_email}.",
         )
 
+    if len(raw_bytes) > MAX_EMAIL_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Email payload too large ({len(raw_bytes):,} bytes). Maximum allowed size is 10 MB.",
+        )
+
     try:
         record = await run_in_threadpool(analyze_raw_email, raw_bytes)
         await save_to_history(record)
@@ -407,6 +423,11 @@ async def analyze_email_file(file: UploadFile = File(...)):
         raw_bytes = await file.read()
         if not raw_bytes:
             raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+        if len(raw_bytes) > MAX_EMAIL_SIZE_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large ({len(raw_bytes):,} bytes). Maximum allowed size is 10 MB.",
+            )
         record = await run_in_threadpool(analyze_raw_email, raw_bytes)
         await save_to_history(record)
         return record
@@ -596,3 +617,51 @@ async def generate_report_from_file(file: UploadFile = File(...)):
     except Exception as e:
         logger.exception("Report generation from file failed")
         raise HTTPException(status_code=500, detail=f"Report generation from file failed: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Module 7: Adversarial Self-Red-Teaming Endpoint
+# ---------------------------------------------------------------------------
+
+@app.post("/adversarial/run")
+async def run_adversarial_test_endpoint(req: AdversarialRunRequest = AdversarialRunRequest()):
+    """
+    Module 7: Adversarial Self-Red-Teaming Endpoint.
+    Generates an AI-crafted phishing email designed to evade detection filters,
+    or tests custom adversarial input against the complete TraceShield pipeline.
+    Returns the full EmailAnalysisRecord with adversarial notes and verdict.
+    """
+    try:
+        if req.custom_email:
+            sample_email = req.custom_email
+        else:
+            sample_email = await run_in_threadpool(
+                generate_adversarial_sample,
+                strategy=req.strategy,
+                custom_prompt=req.custom_prompt,
+            )
+
+        test_result = await run_in_threadpool(
+            run_self_test,
+            sample_email=sample_email,
+            pipeline_func=analyze_raw_email,
+            strategy_name=req.strategy,
+        )
+
+        record = test_result["record"]
+        await save_to_history(record)
+
+        return {
+            "tested": test_result["tested"],
+            "strategy": test_result["strategy"],
+            "generated_sample_caught": test_result["generated_sample_caught"],
+            "final_risk_score": test_result["final_risk_score"],
+            "risk_tier": test_result["risk_tier"],
+            "confidence_level": test_result["confidence_level"],
+            "detected_layers": test_result["detected_layers"],
+            "notes": test_result["notes"],
+            "record": record,
+        }
+    except Exception as e:
+        logger.exception("Adversarial self-test failed")
+        raise HTTPException(status_code=500, detail=f"Adversarial self-test failed: {e}")

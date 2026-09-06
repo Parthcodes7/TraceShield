@@ -22,17 +22,42 @@ import re
 import os
 import ipaddress
 
+try:
+    import tldextract
+    _TLDEXTRACT_AVAILABLE = True
+except ImportError:
+    _TLDEXTRACT_AVAILABLE = False
+
 logger = logging.getLogger("traceshield.header_forensics")
 
-# Mass-mailer X-Mailer signatures — legitimate transactional email rarely uses these
-SUSPICIOUS_MAILERS = [
-    "sendblaster", "mailchimp", "phpmailer", "massmailer", "sendinblue", "bulk"
+# High-risk X-Mailer signatures — dedicated spam/malware-sending tools
+# NOTE: mailchimp, sendinblue, sendgrid etc. send legitimate transactional mail
+# and must NOT be flagged as suspicious (high false-positive rate).
+SUSPICIOUS_MAILERS_HIGH = [
+    "sendblaster", "massmailer", "bulk mailer", "group mail",
+    "atomic mail", "advanced direct remailer",
+]
+# Informational only — mass-send platforms. Not scored, just logged.
+SUSPICIOUS_MAILERS_INFO = [
+    "phpmailer", "mailchimp", "sendinblue", "sendgrid",
+    "constant contact", "brevo",
 ]
 
 # Attachment extensions commonly used for malware delivery
+# Updated 2026: added disk images (.iso/.img), Office macro formats (.docm/.xlsm)
+# Windows shortcut (.lnk), and HTML application (.hta) threat vectors.
 DANGEROUS_EXTENSIONS = [
+    # Executables & scripts
     ".exe", ".bat", ".cmd", ".vbs", ".js", ".jar",
-    ".ps1", ".msi", ".scr", ".pif", ".hta", ".zip", ".rar"
+    ".ps1", ".msi", ".scr", ".pif", ".hta", ".com",
+    # Archives (commonly used to bypass attachment scanners)
+    ".zip", ".rar", ".7z", ".tar", ".gz",
+    # Disk images (modern malware delivery vector)
+    ".iso", ".img", ".vhd", ".vhdx",
+    # Office macro-enabled formats
+    ".docm", ".xlsm", ".pptm", ".xltm",
+    # Windows shortcuts & compiled HTML
+    ".lnk", ".chm",
 ]
 
 
@@ -215,26 +240,40 @@ def check_display_name_spoofing(msg: email.message.Message) -> bool:
     but the actual sending address domain does not match it.
     e.g. "SBI Bank" <hacker@phish.com> — display says SBI but domain is phish.com.
 
-    Fix: check that the brand keyword itself appears in the domain, not a stripped
-    fragment that could accidentally appear inside unrelated domain strings.
+    Uses tldextract (when available) to compare only the registered domain (SLD+TLD)
+    rather than the full hostname, preventing both false positives from subdomains
+    and false negatives from suffix-appended lookalike domains
+    (e.g., 'sbi-secure-login.com' correctly fails — 'sbi' is not the SLD).
     """
     KNOWN_BRANDS = [
-        "sbi", "hdfc", "icici", "axis bank", "bank of india", "pnb", "kotak",
+        "sbi", "hdfc", "icici", "axis", "bank of india", "pnb", "kotak",
         "paypal", "microsoft", "apple", "amazon", "google", "irctc", "uidai",
-        "aadhar", "income tax", "epfo", "nps", "lic",
+        "aadhar", "income tax", "epfo", "nps", "lic", "phonepe", "paytm",
     ]
     raw_from = msg.get("From", "")
     display_name, addr = email.utils.parseaddr(raw_from)
     display_name_lower = display_name.lower()
     addr_domain = addr.split("@")[-1].lower() if "@" in addr else ""
 
+    # Extract only the registrable domain (SLD, no subdomain, no TLD)
+    # e.g. 'mail.sbi.co.in' -> 'sbi', 'sbi-secure-login.com' -> 'sbi-secure-login'
+    if _TLDEXTRACT_AVAILABLE and addr_domain:
+        ext = tldextract.extract(addr_domain)
+        # registered_domain = sld + tld, e.g. 'sbi.co.in'
+        # domain = sld only, e.g. 'sbi'
+        addr_sld = ext.domain.lower()  # Just the SLD for brand matching
+    else:
+        # Fallback: strip common TLDs manually
+        addr_sld = addr_domain.split(".")[0] if addr_domain else ""
+
     for brand in KNOWN_BRANDS:
         if brand in display_name_lower:
             # Normalize brand to a single token (e.g., "bank of india" -> "bankofindia")
             brand_token = brand.replace(" ", "")
-            # Check if ANY part of the brand token is absent from the domain
-            # (a legitimate SBI email should have 'sbi' somewhere in its domain)
-            if brand_token not in addr_domain:
+            # A legitimate brand email's SLD should be exactly the brand token
+            # 'sbi.co.in' -> sld='sbi' -> matches 'sbi' brand ✓
+            # 'sbi-secure-login.com' -> sld='sbi-secure-login' -> 'sbi' NOT == sld → spoof ✓
+            if brand_token != addr_sld and brand_token not in addr_sld.replace("-", "").replace("_", ""):
                 return True
     return False
 
@@ -249,12 +288,15 @@ def detect_anomaly_flags(msg: email.message.Message, relay_chain: list) -> list:
     if len(relay_chain) < 2:
         flags.append("Unusually short relay chain — may indicate spoofed headers")
 
-    # Flag 2: Suspicious X-Mailer header (mass mailer tools)
+    # Flag 2: Suspicious X-Mailer header (dedicated spam-sending tools only)
+    # Only flag HIGH-risk mailers to avoid false positives from legitimate marketing tools.
     x_mailer = msg.get("X-Mailer", "").lower()
-    if x_mailer and any(sm in x_mailer for sm in SUSPICIOUS_MAILERS):
+    if x_mailer and any(sm in x_mailer for sm in SUSPICIOUS_MAILERS_HIGH):
         flags.append(
-            f"Suspicious X-Mailer detected: '{x_mailer}' — associated with bulk senders"
+            f"High-risk bulk mailer detected: '{x_mailer}' — associated with spam campaigns"
         )
+    elif x_mailer and any(sm in x_mailer for sm in SUSPICIOUS_MAILERS_INFO):
+        logger.debug("Informational: Mass-send platform detected in X-Mailer: %s", x_mailer)
 
     # Flag 3: Display name spoofing
     if check_display_name_spoofing(msg):

@@ -1,6 +1,7 @@
 """
 Comprehensive Verification Test Suite for TraceShield Backend
-Tests all modules, improvements, bug fixes, and API endpoints.
+Tests all modules (1 through 7), adversarial red-teaming, targeted demo emails,
+bug fixes, and API endpoints.
 """
 
 import sys
@@ -9,15 +10,21 @@ import io
 import asyncio
 from fastapi.testclient import TestClient
 
+# Ensure UTF-8 output on Windows consoles
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 # Ensure backend directory is in path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from main import app, init_db
+from main import app, init_db, analyze_raw_email
 from modules.header_forensics import analyze_headers
 from modules.content_analysis import analyze_content
 from modules.geolocation import geolocate_ip
 from modules.fusion_scoring import run_fusion
 from modules.report_generator import generate_report_pdf, generate_report_html
+from modules.adversarial_test import generate_adversarial_sample, run_self_test
+
 
 def test_modules_directly():
     print("--- 1. Testing Core Modules Directly ---")
@@ -87,8 +94,61 @@ def test_modules_directly():
     assert len(pdf_bytes) > 1000, "PDF report generation failed"
     print(f"  [PASS] Report Generator (HTML {len(html_out)} bytes, PDF {len(pdf_bytes)} bytes)")
 
+    # Module 7: Adversarial Self-Red-Teaming
+    adv_sample = generate_adversarial_sample(strategy="business_routine")
+    assert len(adv_sample) > 50, "Adversarial sample generation returned empty text"
+    adv_res = run_self_test(adv_sample, analyze_raw_email, strategy_name="business_routine")
+    print(f"Adversarial Self-Test Results:")
+    print(f"  - Strategy: {adv_res['strategy']}")
+    print(f"  - Caught: {adv_res['generated_sample_caught']}")
+    print(f"  - Score: {adv_res['final_risk_score']} ({adv_res['risk_tier']})")
+    print(f"  - Notes: {adv_res['notes']}")
+    assert adv_res["tested"] is True
+    assert "notes" in adv_res and len(adv_res["notes"]) > 0
+    print("  [PASS] Module 7: Adversarial Self-Red-Teaming")
+
+
+def test_targeted_demo_emails():
+    print("\n--- 2. Testing Targeted Demo Emails Suite ---")
+    test_emails_dir = os.path.join(os.path.dirname(__file__), "data", "test_emails")
+
+    # 1. Quishing QR Demo
+    quishing_path = os.path.join(test_emails_dir, "dummy_quishing_qr.eml")
+    if os.path.exists(quishing_path):
+        with open(quishing_path, "rb") as f:
+            rec = analyze_raw_email(f.read())
+        print(f"Quishing QR: Score {rec.scoring.final_risk_score}, Tier {rec.scoring.risk_tier}")
+        assert rec.content_analysis is not None
+        assert len(rec.content_analysis.qr_codes_found) > 0, "Failed to decode embedded QR code"
+        assert rec.content_analysis.qr_codes_found[0].lookalike_check is True
+        print(f"  - Decoded QR URL: {rec.content_analysis.qr_codes_found[0].decoded_url}")
+        print("  [PASS] dummy_quishing_qr.eml (QR Quishing Attack caught)")
+
+    # 2. Homoglyph Demo
+    homoglyph_path = os.path.join(test_emails_dir, "dummy_homoglyph.eml")
+    if os.path.exists(homoglyph_path):
+        with open(homoglyph_path, "rb") as f:
+            rec = analyze_raw_email(f.read())
+        print(f"Homoglyph: Score {rec.scoring.final_risk_score}, Tier {rec.scoring.risk_tier}")
+        assert rec.content_analysis is not None
+        assert len(rec.content_analysis.homoglyph_domains_found) > 0, "Failed to detect Cyrillic homoglyph"
+        print(f"  - Detected Homoglyph: {rec.content_analysis.homoglyph_domains_found[0].decoded_ascii}")
+        print("  [PASS] dummy_homoglyph.eml (Punycode IDN Homoglyph caught)")
+
+    # 3. VPN / Cloud Origin Demo
+    vpn_path = os.path.join(test_emails_dir, "dummy_vpn_cloud_origin.eml")
+    if os.path.exists(vpn_path):
+        with open(vpn_path, "rb") as f:
+            rec = analyze_raw_email(f.read())
+        print(f"VPN / Datacenter: Score {rec.scoring.final_risk_score}, Origin {rec.geolocation.origin_ip}")
+        assert rec.geolocation is not None
+        assert rec.geolocation.is_known_vpn_or_hosting is True, "Failed to flag DigitalOcean cloud origin"
+        print(f"  - Datacenter ISP: {rec.geolocation.origin_isp}")
+        print("  [PASS] dummy_vpn_cloud_origin.eml (Hosting/VPN origin caught)")
+
+
 def test_api_endpoints():
-    print("\n--- 2. Testing FastAPI Endpoints via TestClient ---")
+    print("\n--- 3. Testing FastAPI Endpoints via TestClient ---")
     client = TestClient(app)
 
     # 1. Health check & capability flags
@@ -161,8 +221,23 @@ def test_api_endpoints():
     assert len(json_rep_resp.content) > 1000
     print(f"  [PASS] POST /report (PDF returned: {len(json_rep_resp.content)} bytes)")
 
+    # 8. Adversarial Red-Teaming Endpoint
+    adv_resp = client.post("/adversarial/run", json={"strategy": "business_routine"})
+    assert adv_resp.status_code == 200, f"Adversarial run failed: {adv_resp.text}"
+    adv_data = adv_resp.json()
+    print("Adversarial endpoint response:")
+    print(f"  - Strategy: {adv_data['strategy']}")
+    print(f"  - Caught: {adv_data['generated_sample_caught']}")
+    print(f"  - Score: {adv_data['final_risk_score']}")
+    print(f"  - Notes: {adv_data['notes']}")
+    assert adv_data["tested"] is True
+    assert "record" in adv_data and adv_data["record"]["email_id"]
+    print("  [PASS] POST /adversarial/run")
+
+
 if __name__ == "__main__":
     test_modules_directly()
+    test_targeted_demo_emails()
     test_api_endpoints()
     print("\n==========================================")
     print("ALL TESTS PASSED WITH 100% SUCCESS!")

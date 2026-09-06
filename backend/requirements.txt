@@ -15,3 +15,5 @@ xhtml2pdf
 pydantic
 python-multipart
 aiosqlite
+qrcode
+tldextract

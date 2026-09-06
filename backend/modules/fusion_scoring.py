@@ -64,7 +64,11 @@ def compute_risk_score(data: dict) -> dict:
 
     dmarc = (hf.get("dmarc_result") or "").lower()
     if dmarc == "fail":
-        header_score += 15
+        # DMARC fail without SPF/DKIM fail = policy misalignment (less severe than forgery)
+        # Scoring: 8 pts standalone to avoid pushing a legitimate email with no DMARC record
+        # into Medium risk purely on policy grounds.
+        dmarc_penalty = 8 if (spf != "fail" and dkim != "fail") else 15
+        header_score += dmarc_penalty
         protocol_failure_signals += 1
         triggered_reasons.append("DMARC policy check FAILED — domain owner flags unaligned sending sources")
     elif dmarc == "pass":
@@ -191,6 +195,14 @@ def compute_risk_score(data: dict) -> dict:
     triggered_reasons = deduped_reasons
 
     # Mitigating check: if clean cryptographically and no hard threats, cap false positive
+    # NLP High-Confidence Hard-Threat Flag
+    # If NLP scores > 0.75 for BOTH urgency AND impersonation, treat this as a
+    # hard threat signal even if auth checks passed. This catches sophisticated
+    # phishing that passes SPF/DKIM (e.g., compromised legitimate domain).
+    nlp_high_confidence_threat = (
+        urgency > 0.75 and impersonation > 0.75
+    )
+
     has_hard_threat = (
         protocol_failure_signals > 0
         or bool(lookalikes)
@@ -198,6 +210,7 @@ def compute_risk_score(data: dict) -> dict:
         or bool(quishing_attacks)
         or bool(suspicious_attachments)
         or display_spoof
+        or nlp_high_confidence_threat
     )
     is_strongly_authenticated = (
         protocol_pass_signals >= 2
@@ -315,17 +328,31 @@ def generate_summary(scoring: dict, geolocation: dict) -> str:
     if is_hosting:
         geo_desc += " (commercial hosting / VPN infrastructure)"
 
+    # Build geo clause — omit if all values are unknown (no GeoIP DB available)
+    geo_known = (
+        country not in ("Unknown", "an unknown location")
+        or isp not in ("Unknown", "an unclassified provider")
+    )
+    geo_clause = f"Originating from {geo_desc}, " if geo_known else ""
+
     if tier == "Low":
         if score == 0 and not reasons:
+            if geo_known:
+                return (
+                    f"This email has been assessed as SAFE with a risk score of 0/100 ({confidence}). "
+                    f"Originating from {geo_desc}, all cryptographic checks (SPF/DKIM/DMARC) validated successfully. "
+                    "No lookalike domains, deceptive homoglyphs, quishing QR codes, or credential-harvesting triggers "
+                    "were detected."
+                )
             return (
                 f"This email has been assessed as SAFE with a risk score of 0/100 ({confidence}). "
-                f"Originating from {geo_desc}, all cryptographic checks (SPF/DKIM/DMARC) validated successfully. "
+                "All cryptographic checks (SPF/DKIM/DMARC) validated successfully. "
                 "No lookalike domains, deceptive homoglyphs, quishing QR codes, or credential-harvesting triggers "
                 "were detected."
             )
         return (
             f"This email has been assessed as LOW RISK with a score of {score}/100 ({confidence}). "
-            f"It originated from {geo_desc}. While standard authentication passed, minor non-critical "
+            f"{geo_clause}While standard authentication passed, minor non-critical "
             f"findings were noted: {'; '.join(reasons[:2]) or 'routine business phrasing'}. "
             "No active exploit or phishing attack was detected."
         )
@@ -334,7 +361,7 @@ def generate_summary(scoring: dict, geolocation: dict) -> str:
         top = "; ".join(reasons[:3]) if reasons else "unusual linguistic patterns"
         return (
             f"This email has been assessed as SUSPICIOUS (Moderate Risk, score {score}/100, {confidence}). "
-            f"Originating from {geo_desc}, it exhibited {len(reasons)} warning indicator(s). "
+            f"{geo_clause}it exhibited {len(reasons)} warning indicator(s). "
             f"Key findings include: {top}. "
             f"{scoring.get('confidence_reason', '')} "
             "Precautionary verification via a secondary channel is advised before interacting with this message."
@@ -344,7 +371,7 @@ def generate_summary(scoring: dict, geolocation: dict) -> str:
     top = "; ".join(reasons[:3]) if reasons else "multiple severe forensic anomalies"
     return (
         f"CRITICAL ALERT: This email has been assessed as a HIGH-RISK PHISHING/FRAUD THREAT with a score of {score}/100 "
-        f"({confidence}). Originating from {geo_desc}, forensic analysis identified {len(reasons)} active threat indicator(s). "
+        f"({confidence}). {geo_clause}forensic analysis identified {len(reasons)} active threat indicator(s). "
         f"Primary attack vectors: {top}. "
         f"{scoring.get('confidence_reason', '')} "
         "Immediate quarantine and defensive blocking are recommended."

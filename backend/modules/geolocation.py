@@ -13,16 +13,37 @@ city_reader = None
 asn_reader = None
 
 # Initialize readers globally to save overhead, if files exist
+# Wrapped in try/except: a corrupted or half-downloaded .mmdb file can raise an
+# exception at import time that would kill the FastAPI process on startup.
 if os.path.exists(CITY_DB_PATH):
-    city_reader = geoip2.database.Reader(CITY_DB_PATH)
+    try:
+        city_reader = geoip2.database.Reader(CITY_DB_PATH)
+    except Exception as _e:
+        logger.error("Failed to open GeoLite2-City.mmdb: %s", _e)
 
 if os.path.exists(ASN_DB_PATH):
-    asn_reader = geoip2.database.Reader(ASN_DB_PATH)
+    try:
+        asn_reader = geoip2.database.Reader(ASN_DB_PATH)
+    except Exception as _e:
+        logger.error("Failed to open GeoLite2-ASN.mmdb: %s", _e)
 
-# A static list of common cloud/VPN providers that standard emails shouldn't originate directly from
+# Cloud hosting and VPN providers that standard corporate/banking email
+# should NOT originate from. Residential ISPs (BSNL, Airtel, JIO etc.)
+# are explicitly EXCLUDED to avoid false positives on user-sent mail.
 KNOWN_HOSTING_PROVIDERS = [
-    "digitalocean", "amazon", "aws", "ovh", "m247", "choopa", "hetzner", 
-    "linode", "vultr", "alibaba", "tencent", "google cloud", "azure", "microsoft"
+    # Major public clouds
+    "amazon", "amazonaws", "aws",
+    "google cloud", "googlecloud",
+    "microsoft azure", "azure",
+    "alibaba cloud", "alibaba",
+    "tencent cloud", "tencent",
+    # VPS / dedicated hosting
+    "digitalocean", "linode", "vultr", "hetzner", "ovh",
+    "choopa", "m247", "psychz", "codero", "liquidweb",
+    # Bulletproof / grey-market hosters
+    "frantech", "2connect", "serverius",
+    # CDN/proxy used as origin obfuscation
+    "cloudflare",
 ]
 
 def _is_known_hosting(org_name: str) -> bool:

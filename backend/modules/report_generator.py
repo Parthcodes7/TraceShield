@@ -60,6 +60,9 @@ def generate_report_pdf(record) -> bytes:
     """
     Compiles the forensic findings into a downloadable binary PDF buffer.
     Returns the PDF content as bytes.
+
+    Size guard: xhtml2pdf can return err=0 but produce an empty/corrupt PDF
+    when CSS is unsupported. We assert a minimum size to catch this silently.
     """
     html_content = generate_report_html(record)
     pdf_buffer = BytesIO()
@@ -68,7 +71,16 @@ def generate_report_pdf(record) -> bytes:
     if pisa_status.err:
         raise RuntimeError(f"xhtml2pdf encountered errors while creating PDF: {pisa_status.err}")
 
-    return pdf_buffer.getvalue()
+    pdf_bytes = pdf_buffer.getvalue()
+    # A valid single-page PDF is never smaller than 1 KB.
+    # Empty output indicates a silent renderer failure (e.g., unsupported CSS).
+    if len(pdf_bytes) < 1024:
+        raise RuntimeError(
+            f"PDF output is suspiciously small ({len(pdf_bytes)} bytes) — "
+            "xhtml2pdf may have silently failed. Check the HTML template for unsupported CSS."
+        )
+
+    return pdf_bytes
 
 def save_report_pdf(record, output_path: str) -> str:
     """
