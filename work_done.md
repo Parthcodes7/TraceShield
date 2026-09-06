@@ -384,21 +384,86 @@ ALL TESTS PASSED WITH 100% SUCCESS!
 | **HTML Templating**| `Jinja2` | ✅ Functional | Fast template engine for forensic dossiers |
 | **Multipart Uploads**| `python-multipart` | ✅ Installed | Streaming `.eml` file uploads for FastAPI |
 | **Async SQLite** | `aiosqlite` | ✅ Installed | Local forensic history persistence |
+| **QR Generation** | `qrcode` | ✅ Installed | Real QR matrix synthesis for quishing evaluation |
 | **Data Models** | `pydantic` | ✅ Functional | Pydantic v2 data models |
 | **Web Server** | `fastapi`, `uvicorn` | ✅ Functional | Async REST API framework with threadpool offloading |
+
+---
+
+### 10. Module 7: Adversarial Self-Red-Teaming ([`backend/modules/adversarial_test.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/modules/adversarial_test.py))
+
+Evaluates TraceShield's multi-layer detection engine against AI-crafted evasion attacks designed to bypass linguistic and keyword-based NLP filters.
+
+#### Features Implemented:
+* **Procedural Multi-Strategy Evasion Engine:**
+  * `business_routine`: Low-urgency supplier invoice reconciliation phrasing with lookalike routing (`bank0findia.co.in`) and Reply-To redirection.
+  * `it_compliance`: Calm quarterly corporate SSL/SSO certificate maintenance notice featuring Cyrillic IDN Homoglyphs (`micrоsoft.com` with Cyrillic `о`).
+  * `quishing_statement`: Disguised employee provident fund statement with government portal lookalike link.
+* **Optional Zero-Shot LLM Synthesizer:**
+  * Auto-detects `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`, or `OPENAI_API_KEY` in the environment to generate novel adversarial phishing attacks dynamically on-demand during live demonstrations.
+* **Multi-Layer Neutralization Audit:**
+  * Demonstrates that when linguistic urgency is stripped to evade NLP, the attack is neutralized by structural and protocol defenses: SPF/DKIM authentication, Reply-To discrepancy, Lookalike detection, and Punycode homoglyphs.
+* **Calibrated Confidence Integration:**
+  * Formulates clear plain-English incident notes justifying whether the evasion sample was caught, or why calibrated confidence flags it for human SOC review.
+* **REST API Endpoint (`POST /adversarial/run`):**
+  * One-click trigger endpoint executing generation, full pipeline analysis, and SQLite history logging.
+
+---
+
+## 🧪 Targeted Demo Email Suite ([`backend/data/test_emails/`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/))
+
+A complete 5-email evaluation suite specifically targeting each forensic layer of TraceShield:
+
+1. **[`dummy_phishing_1.eml`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/dummy_phishing_1.eml):** Classic banking brand spoof (Bank of India) with SPF/DKIM fail, lookalike URL, urgency triggers, and credential harvesting.
+2. **[`dummy_legitimate_1.eml`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/dummy_legitimate_1.eml):** Google Calendar invitation verifying cryptographic pass (SPF/DKIM/DMARC pass) and false-positive prevention.
+3. **[`dummy_quishing_qr.eml`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/dummy_quishing_qr.eml):** Multipart email with embedded real PNG QR code decoding to lookalike `bank0findia.co.in/sbi/kyc-login`, verified by `pyzbar`.
+4. **[`dummy_homoglyph.eml`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/dummy_homoglyph.eml):** Unicode IDN homoglyph attack (`р\u0430ypal.com` with Cyrillic `а`), unmasked to Punycode `xn--ypal-43d9g.com`.
+5. **[`dummy_vpn_cloud_origin.eml`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/data/test_emails/dummy_vpn_cloud_origin.eml):** Email originating from DigitalOcean commercial datacenter IP (`167.99.160.1`), triggering ISP classification and cloud infrastructure flag.
+
+---
+
+### 11. All-Module Accuracy & Robustness Hardening (Phase 3)
+
+A comprehensive audit and accuracy upgrade was performed across all 7 backend modules to eliminate false positives, enhance detection sensitivity, and prevent edge-case failures:
+
+* **Module 1 (Header Forensics):**
+  * Split `SUSPICIOUS_MAILERS` into tiers (High penalty for attack tools like `sendblaster`/`phpmailer`, Moderate penalty for commercial services like `mailchimp`/`sendinblue`) to prevent false positive alarms on legitimate marketing emails.
+  * Added 14 new dangerous/weaponized extensions (`.iso`, `.img`, `.lnk`, `.docm`, `.xlsm`, `.pptm`, `.wsf`, `.cpl`, `.chm`, `.inf`, `.reg`, `.dll`, `.sys`, `.cab`).
+  * Utilized `tldextract` for robust Second-Level Domain (SLD) comparison in display-name spoofing.
+* **Module 2 (Content Analysis):**
+  * Implemented SLD-only Levenshtein matching to eliminate false positives caused by generic subdomains.
+  * Added brand-as-substring lookalike detection for deceptive domains like `sbi-update-portal.com`.
+  * Expanded NLP context window to 4096 characters for full body scanning.
+  * Implemented regex phrase-pair credential harvesting logic (`login` + `password`/`otp`).
+  * Added inline base64 QR image extraction from HTML `<img>` tags (`data:image/png;base64,...`).
+* **Module 3 (Geolocation):**
+  * Added `try/except` initialization guards for GeoIP databases to ensure missing files gracefully return `"Unknown"` without crashing.
+  * Refined cloud hosting ISP list to eliminate false positives on residential/consumer ISPs.
+* **Module 4 (Fusion Scoring):**
+  * Reduced standalone unaligned DMARC score penalty from 15 to 8 points.
+  * Added high-confidence NLP hard-threat flag to elevate high-probability phishing content.
+  * Guarded executive summary generator against invalid `"Unknown"` geolocation clause phrasing.
+* **Module 5 (Evidence Report Generator):**
+  * Added PDF size validation guard (`assert len(pdf_bytes) > 1024`) to ensure generated PDFs are non-empty before streaming.
+* **Module 6 (FastAPI Orchestration):**
+  * Enforced a 10MB request payload limit (`MAX_EMAIL_SIZE_BYTES = 10 * 1024 * 1024`) with HTTP 413 Payload Too Large responses.
+* **Module 7 (Adversarial Self-Red-Teaming):**
+  * Refined `is_caught` confidence-aware evasion detection.
+  * Added 2 new adversarial attack templates (`executive_whaling`, `invoice_fraud`).
 
 ---
 
 ## 🚀 Remaining Roadmap to 100% Complete Prototype
 
 ```
-[████████████████████░░░░] ~80-85% Complete Overall
+[███████████████████████░] ~90-95% Complete Overall (Backend 100% Finished)
 ```
 
-1. ✅ **FastAPI Endpoints ([`backend/main.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/main.py)):** Expose `/analyze`, `/analyze/file`, `/analyze/batch`, `/history`, `/report` accepting `.eml` uploads and raw text over HTTP.
-2. ✅ **Module 5 — Evidence Report Generator ([`backend/modules/report_generator.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/modules/report_generator.py)):** Generate court-ready forensic PDF reports using Jinja2 + `xhtml2pdf`.
-3. ✅ **Engine Hardening & Persistence:** Concurrency guards, threadpool offloading, SQLite forensic history, attachment hashing, RFC alignment.
-4. ⏳ **Frontend Dashboard & TraceMap ([`frontend/src/`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/)):** React interface with Leaflet.js map, risk gauge, score breakdown bars, and PDF download button.
-5. ⏳ **Module 6 — Chrome Browser Extension ([`extension/`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/extension/)):** Manifest V3 in-inbox scanner badging Gmail messages.
-6. ⏳ **Module 7 — Adversarial Self-Red-Teaming ([`backend/modules/adversarial_test.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/modules/adversarial_test.py)):** Live demo feature testing AI-generated evasion emails against TraceShield.
+1. ✅ **FastAPI Endpoints ([`backend/main.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/main.py)):** `/analyze`, `/analyze/file`, `/analyze/batch`, `/history`, `/report`, `/adversarial/run`.
+2. ✅ **Module 5 — Evidence Report Generator ([`backend/modules/report_generator.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/modules/report_generator.py)):** Jinja2 + `xhtml2pdf` 2-page A4 court dossiers.
+3. ✅ **Module 7 — Adversarial Self-Red-Teaming ([`backend/modules/adversarial_test.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/modules/adversarial_test.py)):** AI-crafted evasion generation and defense evaluation.
+4. ✅ **Targeted Demo Suite:** 5 comprehensive test emails covering Quishing QR, Homoglyphs, Cloud VPNs, and legitimate traffic.
+5. ⏳ **Frontend Dashboard & TraceMap ([`frontend/src/`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/frontend/src/)):** React interface with Leaflet.js map, risk gauge, score breakdown bars, and PDF download button.
+6. ⏳ **Module 6 — Chrome Browser Extension ([`extension/`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/extension/)):** Manifest V3 in-inbox scanner badging Gmail messages.
+
 
