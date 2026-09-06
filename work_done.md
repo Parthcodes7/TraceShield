@@ -1,15 +1,15 @@
 # TraceShield — Comprehensive Work Done & Feature Audit
 ## SIH26106 | AI-Powered Email Threat Detection, GeoLocation & Forensic Intelligence Platform
 **Generated at:** September 6, 2026  
-**Status:** Backend Core, Reporting Engine & REST API (Modules 1–5) Complete & Validated
+**Status:** Backend Core, Reporting Engine, Module 7 Red-Teaming, REST API & Frontend React Dashboard Complete & Validated
 
 ---
 
 ## 📌 Executive Summary
 
-TraceShield has completed the build, refinement, and end-to-end validation of its **Core Forensic Detection & Intelligence Pipeline (Modules 1 through 5)** along with full FastAPI HTTP orchestration.
+TraceShield has completed the build, refinement, and end-to-end validation of its **Core Forensic Detection & Intelligence Pipeline (Modules 1 through 5 and Module 7)** along with full FastAPI HTTP orchestration and a **Cyber-Dark Frontend Intelligence Dashboard (React + Leaflet.js)**.
 
-Every module conforms strictly to the shared Pydantic data contract defined in [`backend/main.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/main.py). All ML models and geographic databases run **100% locally and offline**, requiring zero API subscriptions and zero recurring costs.
+Every module conforms strictly to the shared Pydantic data contract defined in [`backend/main.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/main.py). All ML models, geographic databases, and forensic scanners run **100% locally and offline**, requiring zero API subscriptions and zero recurring costs.
 
 ---
 
@@ -453,17 +453,56 @@ A comprehensive audit and accuracy upgrade was performed across all 7 backend mo
 
 ---
 
+### 12. Frontend Web Dashboard & TraceMap ([`frontend/`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/))
+
+A state-of-the-art **Cyber-Dark Forensic Intelligence Dashboard** built with **React**, **Vanilla CSS**, and **Leaflet.js** connected directly to the FastAPI REST API:
+
+#### Features Implemented:
+* **Cyber-Dark Security Operations Center (SOC) Aesthetic:**
+  * Custom dark palette (`#080c14`, `#0e1524`, `#121c30`) with glowing neon accents (Cyan, Emerald, Amber, Crimson).
+  * High-density typography using Google Fonts (`Outfit`, `Inter`, and `JetBrains Mono`).
+* **Radial Threat Risk Index Gauge ([`ScoreDashboard.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/ScoreDashboard.jsx)):**
+  * 0–100 animated SVG circular progress meter with dynamic color tiering.
+  * High/Moderate Calibrated Confidence indicator explaining cryptographic vs. linguistic rationale.
+  * Dimensional score breakdown progress bars (Headers 0–40 pts, Content 0–45 pts, Network 0–15 pts).
+  * Deduplicated threat indicators with red hazard tags and positive cryptographic authentications baseline with green shield tags.
+* **Geographic Attribution & Routing Map ([`TraceMap.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/TraceMap.jsx)):**
+  * Interactive Leaflet.js dark tile map with animated radar pulse pin on sender coordinates.
+  * Informational popup with Country, City, Public IP, ISP/ASN organization, and commercial cloud/VPN attribution flags.
+  * Origin metadata grid summarizing location, IP, and hosting infrastructure.
+* **Forensic Evidence Dossier & Chain of Custody ([`ReportViewer.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/ReportViewer.jsx)):**
+  * Top bar with cryptographic SHA-256 digest, record ID, and analysis duration profiling with 1-click copy.
+  * **Tab 1 (Protocol & Headers):** SPF, DKIM, DMARC validation status, Return-Path vs. From alignment, brand display spoofing check, and reverse mail relay transmission hops table.
+  * **Tab 2 (Content, Homoglyphs & QR):** Typosquatting/lookalike brand domains table (Levenshtein distance), Cyrillic IDN Homoglyph table with Punycode conversion, and decoded embedded QR quishing barcodes.
+  * **Tab 3 (Attachments):** Filename, MIME type, file size, SHA-256 evidence digest, and weaponization script checks.
+  * **Tab 4 (Remediation):** Automated defensive containment checklist for incident responders.
+  * **1-Click PDF Generation:** Streams `POST /report` and downloads the 2-page court-ready evidence dossier directly to the browser.
+* **One-Click Attack Vectors Bar ([`App.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/App.jsx)):**
+  * Instant switching between preset threat scenarios: Bank of India Spoof (High Risk), Google Calendar Invite (Low Risk), Cyrillic Homoglyph (High Risk), and Cloud VPS Origin (Medium Risk).
+* **Module 7: Adversarial Red-Team Lab ([`AdversarialLab.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/AdversarialLab.jsx)):**
+  * Live simulation modal allowing selection of evasion strategies (`business_routine`, `it_compliance`, `quishing_statement`, `executive_whaling`).
+  * Triggers `POST /adversarial/run` and visualizes which technical forensic layers neutralized linguistic evasion.
+* **Forensic Investigation History Drawer ([`HistoryDrawer.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/HistoryDrawer.jsx)):**
+  * Slide-out triage drawer reading from SQLite (`data/history.db`) with risk tier filtering and 1-click reload of past investigations.
+* **Inspection & Upload Center ([`UploadModal.jsx`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/components/UploadModal.jsx)):**
+  * Drag-and-drop `.eml` upload, raw RFC 822 MIME text editor, and multi-file batch queue processing.
+* **End-to-End Browser Validation:**
+  * Verified in live Chromium browser; `npm run build` compiles clean in 992ms.
+
+---
+
 ## 🚀 Remaining Roadmap to 100% Complete Prototype
 
 ```
-[███████████████████████░] ~90-95% Complete Overall (Backend 100% Finished)
+[████████████████████████] ~95-98% Complete Overall
 ```
 
-1. ✅ **FastAPI Endpoints ([`backend/main.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/main.py)):** `/analyze`, `/analyze/file`, `/analyze/batch`, `/history`, `/report`, `/adversarial/run`.
-2. ✅ **Module 5 — Evidence Report Generator ([`backend/modules/report_generator.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/modules/report_generator.py)):** Jinja2 + `xhtml2pdf` 2-page A4 court dossiers.
-3. ✅ **Module 7 — Adversarial Self-Red-Teaming ([`backend/modules/adversarial_test.py`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/backend/modules/adversarial_test.py)):** AI-crafted evasion generation and defense evaluation.
+1. ✅ **FastAPI Endpoints ([`backend/main.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/main.py)):** `/analyze`, `/analyze/file`, `/analyze/batch`, `/history`, `/report`, `/adversarial/run`.
+2. ✅ **Module 5 — Evidence Report Generator ([`backend/modules/report_generator.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/modules/report_generator.py)):** Jinja2 + `xhtml2pdf` 2-page A4 court dossiers.
+3. ✅ **Module 7 — Adversarial Self-Red-Teaming ([`backend/modules/adversarial_test.py`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/backend/modules/adversarial_test.py)):** AI-crafted evasion generation and defense evaluation.
 4. ✅ **Targeted Demo Suite:** 5 comprehensive test emails covering Quishing QR, Homoglyphs, Cloud VPNs, and legitimate traffic.
-5. ⏳ **Frontend Dashboard & TraceMap ([`frontend/src/`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/frontend/src/)):** React interface with Leaflet.js map, risk gauge, score breakdown bars, and PDF download button.
-6. ⏳ **Module 6 — Chrome Browser Extension ([`extension/`](file:///c:/Users/Asus/OneDrive/Desktop/Traceshield/extension/)):** Manifest V3 in-inbox scanner badging Gmail messages.
+5. ✅ **Frontend Dashboard & TraceMap ([`frontend/src/`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/frontend/src/)):** React + Leaflet.js cyber-dark SOC dashboard with risk gauge, map, evidence dossier, and adversarial lab.
+6. ⏳ **Module 6 — Chrome Browser Extension ([`extension/`](file:///Users/harshaldhonge/Documents/SIH26106/TraceShield/extension/)):** Manifest V3 in-inbox scanner badging Gmail messages.
+
 
 

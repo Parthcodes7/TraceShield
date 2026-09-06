@@ -23,6 +23,21 @@ import Levenshtein
 from bs4 import BeautifulSoup
 
 try:
+    import platform
+    import os
+    if platform.system() == "Darwin":
+        try:
+            from pyzbar import zbar_library
+            _orig_find = zbar_library.find_library
+            def _mac_find_zbar(name):
+                if name == "zbar":
+                    for p in ["/opt/homebrew/lib/libzbar.dylib", "/usr/local/lib/libzbar.dylib"]:
+                        if os.path.exists(p):
+                            return p
+                return _orig_find(name)
+            zbar_library.find_library = _mac_find_zbar
+        except Exception:
+            pass
     from pyzbar.pyzbar import decode
     PYZBAR_AVAILABLE = True
 except (ImportError, Exception):
