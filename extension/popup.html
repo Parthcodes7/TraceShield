@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TraceShield Email Radar</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <header class="popup-header">
+      <div class="brand">
+        <div class="logo-box">🛡️</div>
+        <div>
+          <h1 class="brand-title">TRACESHIELD</h1>
+          <p class="brand-sub">AI Forensic Intelligence (SIH26106)</p>
+        </div>
+      </div>
+      <div id="backend-status-pill" class="status-pill checking">
+        <span class="status-dot"></span>
+        <span id="backend-status-text">Checking API...</span>
+      </div>
+    </header>
+
+    <!-- Main Content Tabs / Actions -->
+    <main class="popup-body">
+      <!-- In-Inbox Scanner Trigger -->
+      <section class="action-card">
+        <div class="card-header">
+          <span class="card-icon">⚡</span>
+          <span class="card-title">Gmail In-Inbox Scanner</span>
+        </div>
+        <p class="card-desc">Scan the currently active email in your open Gmail tab for spoofing, quishing, and homoglyphs.</p>
+        <button id="btn-scan-tab" class="btn btn-primary">
+          <span class="btn-text">Rescan Active Gmail Message</span>
+        </button>
+        <div id="tab-scan-feedback" class="feedback-msg"></div>
+      </section>
+
+      <!-- Fast Text / URL Inspector -->
+      <section class="action-card">
+        <div class="card-header">
+          <span class="card-icon">🔬</span>
+          <span class="card-title">Fast Threat Inspector</span>
+        </div>
+        <p class="card-desc">Paste raw email text, headers, or suspicious message body:</p>
+        <textarea id="raw-input-textarea" class="text-input" rows="3" placeholder="From: support@bank0findia.co.in&#10;Subject: Urgent Security Alert&#10;&#10;Please verify your credentials immediately..."></textarea>
+        <button id="btn-analyze-text" class="btn btn-secondary">
+          <span>Run Forensic Analysis</span>
+        </button>
+
+        <!-- Fast Analysis Results Card -->
+        <div id="quick-result-card" class="result-card" style="display: none;">
+          <div class="result-header">
+            <span id="res-tier-chip" class="tier-chip">High</span>
+            <div id="res-score" class="score-display">85 / 100</div>
+          </div>
+          <div id="res-confidence" class="confidence-text">High Confidence: Protocol Verified</div>
+          <div id="res-triggers" class="triggers-wrap"></div>
+          <button id="btn-download-quick-pdf" class="btn btn-outline" style="margin-top: 8px;">
+            Download 2-Page Evidence PDF
+          </button>
+        </div>
+      </section>
+
+      <!-- Quick Platform Links -->
+      <footer class="popup-footer">
+        <a id="link-open-dashboard" class="footer-link" href="http://localhost:5173" target="_blank" rel="noopener noreferrer">
+          Launch SOC Dashboard ↗
+        </a>
+        <span class="separator">•</span>
+        <span id="api-version-tag" class="footer-version">Backend v2.0.0</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
