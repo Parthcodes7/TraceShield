@@ -13,3 +13,5 @@ geoip2
 Jinja2
 xhtml2pdf
 pydantic
+python-multipart
+aiosqlite

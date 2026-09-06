@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TraceShield Forensic Evidence Report</title>
+<style>
+    @page {
+        size: a4 portrait;
+        margin: 1.2cm;
+        margin-bottom: 2cm;
+        @frame footer {
+            -pdf-frame-content: footerContent;
+            bottom: 0.6cm;
+            margin-left: 1.2cm;
+            margin-right: 1.2cm;
+            height: 1cm;
+        }
+    }
+
+    body {
+        font-family: 'Helvetica', 'Arial', sans-serif;
+        color: #1e293b;
+        font-size: 8.5pt;
+        line-height: 1.35;
+        margin: 0;
+        padding: 0;
+    }
+
+    h1, h2, h3, h4 {
+        color: #0f172a;
+        margin: 0 0 5px 0;
+        padding: 0;
+    }
+
+    /* Header Banner */
+    .header-table {
+        width: 100%;
+        border-bottom: 2px solid #0f172a;
+        padding-bottom: 6px;
+        margin-bottom: 10px;
+    }
+
+    .brand-title {
+        font-size: 16pt;
+        font-weight: bold;
+        color: #0f172a;
+        letter-spacing: 0.5px;
+    }
+
+    .brand-subtitle {
+        font-size: 8pt;
+        color: #475569;
+        margin-top: 2px;
+    }
+
+    .classification-badge {
+        background-color: #0f172a;
+        color: #ffffff;
+        font-size: 7.5pt;
+        font-weight: bold;
+        padding: 4px 8px;
+        text-align: right;
+        display: inline-block;
+        border-radius: 3px;
+        letter-spacing: 0.8px;
+    }
+
+    /* Metadata Block */
+    .meta-box {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        padding: 6px 8px;
+        margin-bottom: 10px;
+    }
+
+    .meta-table {
+        width: 100%;
+        font-size: 8pt;
+    }
+
+    .meta-label {
+        color: #64748b;
+        font-weight: bold;
+        width: 18%;
+        vertical-align: top;
+        padding: 2px 0;
+    }
+
+    .meta-value {
+        color: #0f172a;
+        font-family: 'Courier', monospace;
+        vertical-align: top;
+        padding: 2px 0;
+        word-wrap: break-word;
+    }
+
+    /* Verdict Card */
+    .verdict-table {
+        width: 100%;
+        margin-bottom: 10px;
+        border-collapse: separate;
+        border-spacing: 5px;
+    }
+
+    .score-card {
+        padding: 10px;
+        border-radius: 4px;
+        text-align: center;
+        color: #ffffff;
+        width: 32%;
+        vertical-align: middle;
+    }
+
+    .score-card-high {
+        background-color: #dc2626;
+    }
+
+    .score-card-medium {
+        background-color: #d97706;
+    }
+
+    .score-card-low {
+        background-color: #16a34a;
+    }
+
+    .score-num {
+        font-size: 28pt;
+        font-weight: bold;
+        line-height: 1;
+        margin-bottom: 3px;
+    }
+
+    .score-tier {
+        font-size: 10pt;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .verdict-details {
+        background-color: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        padding: 8px 10px;
+        width: 68%;
+        vertical-align: top;
+    }
+
+    .verdict-title {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #0f172a;
+        margin-bottom: 3px;
+    }
+
+    .confidence-tag {
+        display: inline-block;
+        font-size: 7.5pt;
+        font-weight: bold;
+        padding: 2px 5px;
+        border-radius: 2px;
+        margin-bottom: 4px;
+    }
+
+    .confidence-high {
+        background-color: #e0f2fe;
+        color: #0369a1;
+        border: 1px solid #7dd3fc;
+    }
+
+    .confidence-moderate {
+        background-color: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .summary-text {
+        font-size: 8pt;
+        color: #334155;
+        line-height: 1.4;
+    }
+
+    /* Section Cards */
+    .section-title {
+        font-size: 9.5pt;
+        font-weight: bold;
+        color: #0f172a;
+        border-bottom: 1.5px solid #cbd5e1;
+        padding-bottom: 2px;
+        margin-top: 8px;
+        margin-bottom: 5px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Tables */
+    table.data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 6px;
+        font-size: 7.5pt;
+    }
+
+    table.data-table th {
+        background-color: #0f172a;
+        color: #ffffff;
+        text-align: left;
+        padding: 4px 5px;
+        font-weight: bold;
+    }
+
+    table.data-table td {
+        padding: 3px 5px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: top;
+    }
+
+    table.data-table tr.even {
+        background-color: #f8fafc;
+    }
+
+    /* Status Badges */
+    .badge {
+        padding: 1px 4px;
+        font-weight: bold;
+        font-size: 7pt;
+        border-radius: 2px;
+        display: inline-block;
+        text-transform: uppercase;
+    }
+
+    .badge-pass {
+        background-color: #dcfce7;
+        color: #15803d;
+    }
+
+    .badge-fail {
+        background-color: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .badge-warning {
+        background-color: #fef3c7;
+        color: #b45309;
+    }
+
+    .badge-neutral {
+        background-color: #f1f5f9;
+        color: #475569;
+    }
+
+    /* List styling */
+    .bullet-list {
+        margin: 2px 0 5px 12px;
+        padding: 0;
+        font-size: 8pt;
+    }
+
+    .bullet-list li {
+        margin-bottom: 2px;
+        color: #334155;
+    }
+
+    .threat-item {
+        color: #b91c1c;
+        font-weight: bold;
+    }
+
+    .auth-item {
+        color: #15803d;
+        font-weight: bold;
+    }
+
+    .rec-item {
+        color: #0369a1;
+        font-weight: bold;
+    }
+
+    /* Score Breakdown Mini-Table */
+    .breakdown-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 6px;
+        font-size: 7.5pt;
+    }
+
+    .breakdown-table td {
+        padding: 5px;
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        text-align: center;
+    }
+
+    .breakdown-title {
+        font-weight: bold;
+        color: #475569;
+        font-size: 7pt;
+        text-transform: uppercase;
+    }
+
+    .breakdown-value {
+        font-size: 10pt;
+        font-weight: bold;
+        color: #0f172a;
+        margin-top: 1px;
+    }
+
+    /* Disclaimer */
+    .disclaimer-box {
+        margin-top: 10px;
+        border-top: 1px solid #cbd5e1;
+        padding-top: 5px;
+        font-size: 6.5pt;
+        color: #64748b;
+        line-height: 1.3;
+        text-align: justify;
+    }
+</style>
+</head>
+<body>
+
+    <!-- Header Section -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 65%; vertical-align: top;">
+                <div class="brand-title">TRACESHIELD FORENSIC REPORT</div>
+                <div class="brand-subtitle">AI-Powered Email Threat Detection, Geolocation & Chain of Custody Audit</div>
+                <div style="font-size: 7pt; color: #64748b; margin-top: 2px;">SIH26106 Specification Standard // Automated Incident Dossier</div>
+            </td>
+            <td style="width: 35%; text-align: right; vertical-align: top;">
+                <div class="classification-badge">CONFIDENTIAL // FORENSIC AUDIT</div>
+                <div style="font-size: 7.5pt; color: #475569; margin-top: 3px;">
+                    <strong>Report ID:</strong> {{ email_id[:13] }}<br>
+                    <strong>Timestamp:</strong> {{ analyzed_at.strftime('%Y-%m-%d %H:%M:%S UTC') if analyzed_at.strftime is defined else analyzed_at }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Evidence Integrity & Chain of Custody -->
+    <div class="meta-box">
+        <table class="meta-table">
+            <tr>
+                <td class="meta-label">SHA-256 HASH:</td>
+                <td class="meta-value">{{ raw_email_hash }}</td>
+            </tr>
+            <tr>
+                <td class="meta-label">ORIGIN IP:</td>
+                <td class="meta-value">
+                    <strong>{{ geolocation.origin_ip if geolocation else 'N/A' }}</strong>
+                    {% if geolocation and geolocation.is_known_vpn_or_hosting %}
+                        <span class="badge badge-fail" style="margin-left: 6px;">COMMERCIAL HOSTING / PROXY / VPN</span>
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td class="meta-label">GEOLOCATION:</td>
+                <td class="meta-value">
+                    {{ geolocation.origin_city if geolocation and geolocation.origin_city != 'Unknown' else 'Unknown City' }}, 
+                    {{ geolocation.origin_country if geolocation else 'Unknown' }}
+                    {% if geolocation and geolocation.latitude and geolocation.longitude %}
+                        (Lat: {{ "%.3f"|format(geolocation.latitude) }}, Lon: {{ "%.3f"|format(geolocation.longitude) }})
+                    {% endif %}
+                    &mdash; ISP: <strong>{{ geolocation.origin_isp if geolocation else 'Unknown' }}</strong>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Forensic Threat Verdict -->
+    {% set score = scoring.final_risk_score if scoring else 0 %}
+    {% set tier = scoring.risk_tier if scoring else 'Low' %}
+    <table class="verdict-table">
+        <tr>
+            <td class="score-card {% if tier == 'High' %}score-card-high{% elif tier == 'Medium' %}score-card-medium{% else %}score-card-low{% endif %}">
+                <div class="score-num">{{ score }}</div>
+                <div class="score-tier">{{ tier|upper }} RISK</div>
+                <div style="font-size: 7pt; opacity: 0.9; margin-top: 2px;">0–100 THREAT GAUGE</div>
+            </td>
+            <td class="verdict-details">
+                <div class="verdict-title">Executive Forensic Assessment</div>
+                <div>
+                    {% if scoring and scoring.confidence_level == 'High Confidence' %}
+                        <span class="confidence-tag confidence-high">HIGH CONFIDENCE</span>
+                    {% else %}
+                        <span class="confidence-tag confidence-moderate">MODERATE CONFIDENCE</span>
+                    {% endif %}
+                    <span style="font-size: 7pt; color: #64748b; margin-left: 5px;">{{ scoring.confidence_reason if scoring else '' }}</span>
+                </div>
+                <div class="summary-text" style="margin-top: 5px;">
+                    {{ scoring.llm_summary if scoring else 'No executive narrative generated.' }}
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Dimensional Score Breakdown -->
+    {% if scoring and scoring.score_breakdown %}
+    <table class="breakdown-table">
+        <tr>
+            <td style="width: 33%;">
+                <div class="breakdown-title">Header Authentication</div>
+                <div class="breakdown-value">{{ scoring.score_breakdown.header_authentication.points }} / 40</div>
+                <span class="badge {% if scoring.score_breakdown.header_authentication.status == 'Pass' %}badge-pass{% elif scoring.score_breakdown.header_authentication.status == 'Fail' %}badge-fail{% else %}badge-warning{% endif %}">
+                    {{ scoring.score_breakdown.header_authentication.status }}
+                </span>
+            </td>
+            <td style="width: 33%;">
+                <div class="breakdown-title">Content & Deception</div>
+                <div class="breakdown-value">{{ scoring.score_breakdown.content_threats.points }} / 45</div>
+                <span class="badge {% if scoring.score_breakdown.content_threats.status == 'Low' %}badge-pass{% elif scoring.score_breakdown.content_threats.status == 'High' %}badge-fail{% else %}badge-warning{% endif %}">
+                    {{ scoring.score_breakdown.content_threats.status }}
+                </span>
+            </td>
+            <td style="width: 34%;">
+                <div class="breakdown-title">Network Infrastructure</div>
+                <div class="breakdown-value">{{ scoring.score_breakdown.network_infrastructure.points }} / 15</div>
+                <span class="badge {% if scoring.score_breakdown.network_infrastructure.status == 'Normal' %}badge-pass{% else %}badge-fail{% endif %}">
+                    {{ scoring.score_breakdown.network_infrastructure.status }}
+                </span>
+            </td>
+        </tr>
+    </table>
+    {% endif %}
+
+    <!-- Technical Module 1: Protocol & Header Forensics -->
+    <div class="section-title">1. Protocol & Header Authentication Forensics</div>
+    <table class="data-table">
+        <tr>
+            <th style="width: 25%;">Protocol Check</th>
+            <th style="width: 20%;">Result</th>
+            <th style="width: 55%;">Technical Evaluation</th>
+        </tr>
+        <tr>
+            <td><strong>SPF (Sender Policy)</strong></td>
+            <td>
+                {% set spf = header_forensics.spf_result if header_forensics else 'none' %}
+                <span class="badge {% if spf == 'pass' %}badge-pass{% elif spf == 'fail' %}badge-fail{% else %}badge-neutral{% endif %}">{{ spf }}</span>
+            </td>
+            <td>Validated sending IP against authoritative DNS SPF policy records.</td>
+        </tr>
+        <tr class="even">
+            <td><strong>DKIM (Digital Signature)</strong></td>
+            <td>
+                {% set dkim = header_forensics.dkim_result if header_forensics else 'none' %}
+                <span class="badge {% if dkim == 'pass' %}badge-pass{% elif dkim == 'fail' %}badge-fail{% else %}badge-neutral{% endif %}">{{ dkim }}</span>
+            </td>
+            <td>Cryptographic RSA/Ed25519 body and header hash signature validation.</td>
+        </tr>
+        <tr>
+            <td><strong>DMARC Alignment</strong></td>
+            <td>
+                {% set dmarc = header_forensics.dmarc_result if header_forensics else 'none' %}
+                <span class="badge {% if dmarc == 'pass' %}badge-pass{% elif dmarc == 'fail' %}badge-fail{% else %}badge-neutral{% endif %}">{{ dmarc }}</span>
+            </td>
+            <td>Domain-level authentication policy compliance and alignment check.</td>
+        </tr>
+        <tr class="even">
+            <td><strong>Reply-To Consistency</strong></td>
+            <td>
+                {% if header_forensics and header_forensics.reply_to_mismatch %}
+                    <span class="badge badge-fail">MISMATCH DETECTED</span>
+                {% else %}
+                    <span class="badge badge-pass">ALIGNED</span>
+                {% endif %}
+            </td>
+            <td>Compares claimed sender domain with reply-routing destination.</td>
+        </tr>
+    </table>
+
+    <!-- Relay Chain Trace -->
+    {% if header_forensics and header_forensics.relay_chain %}
+    <div style="font-weight: bold; font-size: 7.5pt; margin: 3px 0 2px 0; color: #475569;">Received Relay Transmission Chain:</div>
+    <table class="data-table">
+        <tr>
+            <th style="width: 8%;">Hop</th>
+            <th style="width: 34%;">Sending Host (From)</th>
+            <th style="width: 34%;">Receiving MTA (By)</th>
+            <th style="width: 24%;">Timestamp</th>
+        </tr>
+        {% for hop in header_forensics.relay_chain %}
+        <tr class="{{ 'even' if loop.index is even else '' }}">
+            <td>#{{ hop.hop }}</td>
+            <td style="font-family: 'Courier', monospace;">{{ hop.from_host }}</td>
+            <td style="font-family: 'Courier', monospace;">{{ hop.by_host }}</td>
+            <td>{{ hop.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% endif %}
+
+    <!-- Technical Module 2: Content & Deception Forensics -->
+    <div class="section-title">2. Linguistic, Homoglyph & Payload Threat Analysis</div>
+    <table class="data-table">
+        <tr>
+            <th style="width: 30%;">Inspection Vector</th>
+            <th style="width: 25%;">Observed Metric</th>
+            <th style="width: 45%;">Finding Details</th>
+        </tr>
+        <tr>
+            <td><strong>NLP Urgency / Pressure</strong></td>
+            <td>{{ (content_analysis.urgency_score * 100)|round|int if content_analysis else 0 }}% Urgency Probability</td>
+            <td>Evaluates artificial psychological time pressure and coercion tactics.</td>
+        </tr>
+        <tr class="even">
+            <td><strong>NLP Impersonation Risk</strong></td>
+            <td>{{ (content_analysis.impersonation_score * 100)|round|int if content_analysis else 0 }}% Impersonation Risk</td>
+            <td>Evaluates identity theft semantic patterns and authority spoofing.</td>
+        </tr>
+        <tr>
+            <td><strong>Credential Harvesting</strong></td>
+            <td>
+                {% if content_analysis and content_analysis.credential_harvesting_detected %}
+                    <span class="badge badge-fail">DETECTED (HIGH RISK)</span>
+                {% else %}
+                    <span class="badge badge-pass">NONE DETECTED</span>
+                {% endif %}
+            </td>
+            <td>Multi-keyword paired analysis for passwords, OTPs, PINs, and banking credentials.</td>
+        </tr>
+        <tr class="even">
+            <td><strong>Lookalike / Typosquatting</strong></td>
+            <td>
+                {% if content_analysis and content_analysis.lookalike_domains_found %}
+                    <span class="badge badge-fail">{{ content_analysis.lookalike_domains_found|length }} BRAND(S) TARGETED</span>
+                {% else %}
+                    <span class="badge badge-pass">CLEAN</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if content_analysis and content_analysis.lookalike_domains_found %}
+                    Targeted brand domains: <strong>{{ content_analysis.lookalike_domains_found|join(', ') }}</strong>
+                {% else %}
+                    No deceptive edit-distance matches against 40+ monitored institutions.
+                {% endif %}
+            </td>
+        </tr>
+        <tr>
+            <td><strong>Unicode Homoglyphs (IDN)</strong></td>
+            <td>
+                {% if content_analysis and content_analysis.homoglyph_domains_found %}
+                    <span class="badge badge-fail">PUNYCODE SPOOFING DETECTED</span>
+                {% else %}
+                    <span class="badge badge-pass">CLEAN</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if content_analysis and content_analysis.homoglyph_domains_found %}
+                    {% for hg in content_analysis.homoglyph_domains_found %}
+                        Punycode: <code>{{ hg.decoded_ascii }}</code> (Visual: {{ hg.visible_domain }})<br>
+                    {% endfor %}
+                {% else %}
+                    No non-Latin Unicode characters disguised in visible hyperlink domains.
+                {% endif %}
+            </td>
+        </tr>
+        <tr class="even">
+            <td><strong>QR Code Quishing Vectors</strong></td>
+            <td>
+                {% if content_analysis and content_analysis.qr_codes_found %}
+                    <span class="badge badge-warning">{{ content_analysis.qr_codes_found|length }} QR CODE(S) DECODED</span>
+                {% else %}
+                    <span class="badge badge-neutral">NO QR CODES</span>
+                {% endif %}
+            </td>
+            <td>
+                {% if content_analysis and content_analysis.qr_codes_found %}
+                    {% for qr in content_analysis.qr_codes_found %}
+                        Decoded URL: <code>{{ qr.decoded_url }}</code><br>
+                    {% endfor %}
+                {% else %}
+                    No embedded image barcode matrices detected.
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <!-- Verified Authentications (Positive Audit) -->
+    {% if scoring and scoring.verified_authentications %}
+    <div class="section-title" style="color: #15803d; border-color: #86efac;">3. Verified Security Baseline (Positive Audit Trail)</div>
+    <ul class="bullet-list">
+        {% for auth in scoring.verified_authentications %}
+            <li class="auth-item">&bull; {{ auth }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Triggered Threat Indicators -->
+    {% if scoring and scoring.triggered_reasons %}
+    <div class="section-title" style="color: #b91c1c; border-color: #fca5a5;">4. Triggered Threat Indicators</div>
+    <ul class="bullet-list">
+        {% for reason in scoring.triggered_reasons %}
+            <li class="threat-item">&bull; {{ reason }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Actionable Recommendations -->
+    {% if scoring and scoring.recommendations %}
+    <div class="section-title" style="color: #0369a1; border-color: #7dd3fc;">5. Incident Response & Containment Recommendations</div>
+    <ul class="bullet-list">
+        {% for rec in scoring.recommendations %}
+            <li class="rec-item">&bull; {{ rec }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    <!-- Legal Chain of Custody Disclaimer -->
+    <div class="disclaimer-box">
+        <strong>EVIDENTIARY DISCLAIMER & CHAIN OF CUSTODY NOTICE:</strong> This forensic intelligence dossier was compiled deterministically by the TraceShield Engine in accordance with SIH26106 platform standards. Findings incorporate cryptographic verification (DKIM RSA/Ed25519, SPF/DMARC DNS records via RFC 7208/7489), offline MaxMind GeoLite2 telemetry, and zero-shot NLP sentiment heuristics. The SHA-256 hash registered on this document confirms the cryptographic state of the analyzed message at timestamp of capture. Intended for institutional cybersecurity review, incident triage, and internal escalation.
+    </div>
+
+    <!-- PDF Page Footer Frame -->
+    <div id="footerContent" style="font-size: 7.5pt; color: #64748b; border-top: 0.5px solid #cbd5e1; padding-top: 3px;">
+        <table style="width: 100%; font-size: 7.5pt;">
+            <tr>
+                <td style="width: 60%; text-align: left;">TraceShield SIH26106 | Cryptographic Forensic Dossier</td>
+                <td style="width: 40%; text-align: right;">Page <pdf:pagenumber> of <pdf:pagecount></td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

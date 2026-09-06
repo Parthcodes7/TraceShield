@@ -12,9 +12,12 @@ Takes the outputs of Modules 1, 2, and 3 and produces:
   - A plain-English forensic executive summary (offline templated + optional LLM)
 """
 
+import logging
 import os
 import re
 from typing import Dict, Any, List, Optional
+
+logger = logging.getLogger("traceshield.fusion_scoring")
 
 
 def compute_risk_score(data: dict) -> dict:
@@ -173,7 +176,7 @@ def compute_risk_score(data: dict) -> dict:
             "— uncommon for legitimate corporate or banking communications"
         )
 
-    origin_score = min(origin_score, 20)
+    origin_score = min(origin_score, 15)  # Spec: Network Infrastructure max = 15 pts
 
     # ── 4. Total Calculation & Mitigating Discounts ─────────────────────────
     total_raw = header_score + content_score + origin_score
@@ -262,19 +265,20 @@ def compute_risk_score(data: dict) -> dict:
         recommendations.append("Always verify links manually if an unexpected financial or account request arises.")
 
     # ── 7. Structured Score Breakdown ────────────────────────────────────────
+    # Key is 'points' (matches report_template.html scoring.score_breakdown.*.points)
     score_breakdown = {
         "header_authentication": {
-            "score": header_score,
+            "points": header_score,
             "max_score": 40,
             "status": "Fail" if header_score >= 20 else "Warning" if header_score >= 10 else "Pass"
         },
         "content_threats": {
-            "score": content_score,
+            "points": content_score,
             "max_score": 45,
             "status": "High" if content_score >= 25 else "Medium" if content_score >= 15 else "Low"
         },
         "network_infrastructure": {
-            "score": origin_score,
+            "points": origin_score,
             "max_score": 15,
             "status": "Suspicious" if origin_score >= 10 else "Normal"
         }

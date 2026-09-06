@@ -1,6 +1,9 @@
+import logging
 import os
 import geoip2.database
 import geoip2.errors
+
+logger = logging.getLogger("traceshield.geolocation")
 
 DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data')
 CITY_DB_PATH = os.path.join(DATA_DIR, 'GeoLite2-City.mmdb')
@@ -64,7 +67,7 @@ def geolocate_ip(ip: str) -> dict:
         except geoip2.errors.AddressNotFoundError:
             pass
         except Exception as e:
-            print(f"GeoIP City Error for {ip}: {e}")
+            logger.warning("GeoIP City Error for %s: %s", ip, e)
 
     # 2. Check ASN/ISP Database
     if asn_reader:
@@ -77,6 +80,6 @@ def geolocate_ip(ip: str) -> dict:
         except geoip2.errors.AddressNotFoundError:
             pass
         except Exception as e:
-            print(f"GeoIP ASN Error for {ip}: {e}")
+            logger.warning("GeoIP ASN Error for %s: %s", ip, e)
 
     return result

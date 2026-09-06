@@ -35,6 +35,8 @@ Thumbs.db
 *.swp
 *.swo
 
-# Generated Output Reports
+# Generated Output Reports & Databases
 backend/data/reports/
+*.db
+*.sqlite3
 *.tmp
