@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+dkimpy
+checkdmarc
+dnspython
+beautifulsoup4
+python-Levenshtein
+transformers
+pyzbar
+Pillow
+idna
+geoip2
+Jinja2
+xhtml2pdf
+pydantic

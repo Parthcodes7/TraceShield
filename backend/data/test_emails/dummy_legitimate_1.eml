@@ -1,0 +1,26 @@
+Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com. [209.85.216.41])
+        by mx.google.com with ESMTPS id j12si12345678pjb.50.2023.10.15.09.00.00
+        for <user@example.com>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 15 Oct 2023 09:00:00 -0700 (PDT)
+From: "Google Calendar" <calendar-notification@google.com>
+To: user@example.com
+Reply-To: calendar-notification@google.com
+Subject: Invitation: Project Sync @ Mon Oct 16, 2023 10am - 10:30am (user@example.com)
+Date: Sun, 15 Oct 2023 09:00:00 -0700
+Message-ID: <cal-123456789@google.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+
+Hi User,
+
+You have been invited to the following event:
+
+Project Sync
+Monday, October 16, 2023 10:00am - 10:30am
+Organizer: team-lead@google.com
+
+View your event at https://calendar.google.com/event?action=VIEW&eid=12345
+
+Best,
+Google Calendar Team
