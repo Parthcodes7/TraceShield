@@ -6,6 +6,7 @@ import ReportViewer from './components/ReportViewer.jsx';
 import UploadModal from './components/UploadModal.jsx';
 import HistoryDrawer from './components/HistoryDrawer.jsx';
 import AdversarialLab from './components/AdversarialLab.jsx';
+import IntroPage from './components/IntroPage.jsx';
 import { Shield, Sparkles, RefreshCw, AlertCircle } from 'lucide-react';
 
 // Built-in raw sample emails for one-click demo
@@ -123,6 +124,7 @@ Operations Team`,
 };
 
 export default function App() {
+  const [hasEntered, setHasEntered] = useState(false);
   const [record, setRecord] = useState(null);
   const [backendHealth, setBackendHealth] = useState(null);
   const [activeDemo, setActiveDemo] = useState('phishing_boi');
@@ -206,6 +208,10 @@ export default function App() {
     }
   };
 
+  if (!hasEntered) {
+    return <IntroPage onEnter={() => setHasEntered(true)} />;
+  }
+
   return (
     <div className="app-container">
       {/* Top Navbar */}
@@ -257,9 +263,9 @@ export default function App() {
           )}
         </div>
 
-        {/* Dashboard Grid */}
-        <div className="dashboard-grid">
-          {/* Threat Gauge & Score Breakdown */}
+        {/* Dashboard Focus Layout */}
+        <div className="dashboard-focus-layout">
+          {/* Top Section: Threat Gauge & Score Breakdown */}
           <ScoreDashboard record={record} />
 
           {/* Geo Attribution & Map */}

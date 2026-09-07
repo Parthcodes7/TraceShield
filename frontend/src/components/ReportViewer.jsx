@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   FileText,
   Download,
@@ -10,7 +10,90 @@ import {
   AlertCircle,
   Copy,
   ExternalLink,
+  Network,
+  Sparkles,
 } from 'lucide-react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Float, Text } from '@react-three/drei';
+import * as THREE from 'three';
+
+function TopologyNode({ position, label, status, delay = 0 }) {
+  const mesh = useRef();
+  
+  useFrame((state) => {
+    if (mesh.current) {
+      mesh.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + delay) * 0.2;
+    }
+  });
+
+  let color = '#3b82f6'; // default blue
+  let emissive = '#6366f1';
+  if (status === 'fail') {
+    color = '#ff3344';
+    emissive = '#ff0000';
+  } else if (status === 'pass') {
+    color = '#00e599';
+    emissive = '#00ff88';
+  }
+
+  return (
+    <group position={position} ref={mesh}>
+      <mesh>
+        <sphereGeometry args={[0.4, 32, 32]} />
+        <meshStandardMaterial 
+          color={color} 
+          emissive={emissive} 
+          emissiveIntensity={status === 'fail' ? 1.5 : 0.8} 
+          wireframe={status === 'fail'}
+        />
+      </mesh>
+      {/* Node Label */}
+      <Text position={[0, -0.7, 0]} fontSize={0.25} color="#ffffff" anchorX="center" anchorY="middle" outlineWidth={0.02} outlineColor="#080c14">
+        {label}
+      </Text>
+    </group>
+  );
+}
+
+function TopologyGraph({ record }) {
+  const hasSpfFail = record?.header_forensics?.spf_result === 'fail';
+  const hasDkimFail = record?.header_forensics?.dkim_result === 'fail';
+  const headerStatus = (hasSpfFail || hasDkimFail) ? 'fail' : 'pass';
+  
+  const hasLookalike = record?.content_analysis?.lookalike_domains_found?.length > 0;
+  const contentStatus = hasLookalike ? 'fail' : 'pass';
+  
+  const hasBadAttach = record?.header_forensics?.attachment_hashes?.some(a => a.is_dangerous);
+  const attachStatus = hasBadAttach ? 'fail' : (record?.header_forensics?.attachment_hashes?.length > 0 ? 'pass' : 'neutral');
+  
+  return (
+    <group>
+      <TopologyNode position={[0, 0, 0]} label="Email Core Payload" status="neutral" delay={0} />
+      <TopologyNode position={[-2, 1.5, -1]} label="Header & Auth" status={headerStatus} delay={1} />
+      <TopologyNode position={[2, 1.5, -1]} label="Content Vectors" status={contentStatus} delay={2} />
+      <TopologyNode position={[0, -2, 1]} label="MIME Attachments" status={attachStatus} delay={3} />
+      <TopologyNode position={[0, 1, 2]} label="Origin Routing" status="pass" delay={1.5} />
+      
+      {/* Abstract connection lines (simple thin cylinders) */}
+      <mesh position={[-1, 0.75, -0.5]} rotation={[0, -0.5, 0.8]}>
+        <cylinderGeometry args={[0.02, 0.02, 2.5]} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
+      </mesh>
+      <mesh position={[1, 0.75, -0.5]} rotation={[0, 0.5, -0.8]}>
+        <cylinderGeometry args={[0.02, 0.02, 2.5]} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
+      </mesh>
+      <mesh position={[0, -1, 0.5]} rotation={[0.5, 0, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 2.5]} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
+      </mesh>
+      <mesh position={[0, 0.5, 1]} rotation={[-1, 0, 0]}>
+        <cylinderGeometry args={[0.02, 0.02, 2.2]} />
+        <meshBasicMaterial color="#3b82f6" transparent opacity={0.3} />
+      </mesh>
+    </group>
+  );
+}
 
 export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }) {
   const [activeTab, setActiveTab] = useState('headers');
@@ -131,6 +214,14 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
         </button>
 
         <button
+          className={`evidence-tab-btn ${activeTab === 'topology' ? 'active' : ''}`}
+          onClick={() => setActiveTab('topology')}
+        >
+          <Network size={15} />
+          3D Threat Topology
+        </button>
+
+        <button
           className={`evidence-tab-btn ${activeTab === 'remediation' ? 'active' : ''}`}
           onClick={() => setActiveTab('remediation')}
         >
@@ -138,6 +229,23 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
           Remediation Actions ({scoring?.recommendations?.length || 0})
         </button>
       </div>
+
+      {/* Tab 5: 3D Threat Topology */}
+      {activeTab === 'topology' && (
+        <div style={{ width: '100%', height: '400px', background: '#020408', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
+          <Canvas camera={{ position: [0, 2, 8], fov: 45 }}>
+            <React.Suspense fallback={null}>
+              <ambientLight intensity={0.5} />
+              <pointLight position={[10, 10, 10]} intensity={1} color="#00f0ff" />
+              <TopologyGraph record={record} />
+              <OrbitControls enableZoom={true} autoRotate autoRotateSpeed={1} />
+            </React.Suspense>
+          </Canvas>
+          <div style={{ position: 'absolute', top: '15px', left: '15px', color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
+            [INTERACTIVE: DRAG TO ROTATE]
+          </div>
+        </div>
+      )}
 
       {/* Tab 1: Protocol & Headers */}
       {activeTab === 'headers' && (
@@ -205,6 +313,36 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
             </div>
           </div>
 
+          {/* XAI Insights Panel */}
+          <div style={{
+            background: 'linear-gradient(145deg, rgba(16, 24, 39, 0.9) 0%, rgba(30, 20, 50, 0.9) 100%)',
+            border: '1px solid rgba(139, 92, 246, 0.4)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '16px 20px',
+            marginBottom: '24px',
+            boxShadow: '0 0 15px rgba(139, 92, 246, 0.1)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              position: 'absolute', top: '-10px', left: '-10px', width: '40px', height: '40px', 
+              background: 'var(--accent-purple)', filter: 'blur(30px)', opacity: 0.5
+            }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+              <Sparkles size={16} style={{ color: 'var(--accent-purple)' }} />
+              <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-purple)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+                Explainable AI (XAI) Protocol Insight
+              </h3>
+            </div>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-primary)', lineHeight: '1.6', margin: 0 }}>
+              {header_forensics?.dmarc_result === 'fail' 
+                ? "The sender's domain lacks DMARC enforcement policies. This critical vulnerability allows attackers to flawlessly spoof the brand's 'From' address, as receiving mail servers have no instructions to reject unauthorized senders."
+                : header_forensics?.spf_result === 'fail' 
+                ? "The origin IP address is not authorized to send emails on behalf of this domain (SPF failure). This is a strong indicator of an infrastructure-level spoofing attack."
+                : "Cryptographic signatures (DKIM) and alignment policies (SPF/DMARC) are intact. The message payload originated from authorized infrastructure."}
+            </p>
+          </div>
+
           {/* Email Headers Meta Table */}
           <div className="forensic-table-wrap">
             <table className="forensic-table">
@@ -220,6 +358,12 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
                   <td>From Header</td>
                   <td style={{ fontFamily: 'var(--font-mono)' }}>
                     {header_forensics?.from_header || 'N/A'}
+                    {header_forensics?.display_name_spoof && (
+                        <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(139, 92, 246, 0.1)', borderLeft: '3px solid var(--accent-purple)', borderRadius: '4px', fontSize: '0.8rem', color: 'var(--text-primary)', fontFamily: 'var(--font-main)' }}>
+                          <strong style={{ color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}><Sparkles size={12}/> AI Verdict:</strong>
+                          The display name was intentionally altered to impersonate a trusted brand, overriding the actual suspicious email address hidden behind it.
+                        </div>
+                    )}
                   </td>
                   <td>
                     {header_forensics?.display_name_spoof ? (
@@ -244,9 +388,15 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
                   <td>Reply-To Alignment</td>
                   <td>
                     {header_forensics?.reply_to_mismatch ? (
-                      <span style={{ color: 'var(--threat-high)' }}>
-                        ⚠️ Discrepancy detected between sender and reply destination!
-                      </span>
+                      <div>
+                        <span style={{ color: 'var(--threat-high)' }}>
+                          ⚠️ Discrepancy detected between sender and reply destination!
+                        </span>
+                        <div style={{ marginTop: '8px', padding: '8px', background: 'rgba(139, 92, 246, 0.1)', borderLeft: '3px solid var(--accent-purple)', borderRadius: '4px', fontSize: '0.8rem', color: 'var(--text-primary)' }}>
+                          <strong style={{ color: 'var(--accent-purple)', display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}><Sparkles size={12}/> AI Verdict:</strong>
+                          The attacker is spoofing a trusted entity in the 'From' header, but secretly routing your replies to their own controlled mailbox.
+                        </div>
+                      </div>
                     ) : (
                       <span style={{ color: 'var(--threat-low)' }}>
                         Aligned with sender mailbox

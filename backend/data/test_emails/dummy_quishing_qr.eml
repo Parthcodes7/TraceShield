@@ -10,21 +10,21 @@ Received: from mail-gw.sbi-verifyportal.net (mail-gw.sbi-verifyportal.net.
  2026 11:30:05 +0530
 MIME-Version: 1.0
 Content-Type: multipart/alternative;
- boundary="===============7217442881982638552=="
+ boundary="===============2287636409302054415=="
 
---===============7217442881982638552==
+--===============2287636409302054415==
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
 Dear Customer, Please scan the attached QR code to verify your KYC details im=
 mediately.
 
---===============7217442881982638552==
+--===============2287636409302054415==
 MIME-Version: 1.0
 Content-Type: multipart/related;
- boundary="===============4187035227675562539=="
+ boundary="===============3548865742716145946=="
 
---===============4187035227675562539==
+--===============3548865742716145946==
 Content-Type: text/html; charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
 
@@ -44,7 +44,7 @@ estriction on outgoing UPI and NetBanking.</p>
 </body>
 </html>
 
---===============4187035227675562539==
+--===============3548865742716145946==
 Content-Type: image/png
 Content-Transfer-Encoding: base64
 Content-Disposition: attachment; filename="kyc_qr_code.png"
@@ -66,6 +66,6 @@ zvz3v5ifZDXyr696SqIxvO7fWZ9SUDHzmvx6sca2e6B0NQZoWeevxMrziMfR9Cfjb9of7nT0OThs
 xXjXduVUGNt+nnx+EtynjE76egCXZmMZ4IHmv2e2rwsZdJXmY/0NWfob+hih+b2XPmT8l+4P2v+7
 s6C8+C8YPw9akS9h/DxoRb6E8fOgFfkSxs+DVuRwcf4fvn3LA5BQgeYAAAAASUVORK5CYII=
 
---===============4187035227675562539==--
+--===============3548865742716145946==--
 
---===============7217442881982638552==--
+--===============2287636409302054415==--
