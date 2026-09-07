@@ -59,7 +59,7 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectRecord }) {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <History size={18} style={{ color: 'var(--accent-cyan)' }} />
-            <h2 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-display)', color: '#fff' }}>
+            <h2 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
               Forensic Investigation History
             </h2>
           </div>
@@ -83,9 +83,9 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectRecord }) {
               key={f}
               onClick={() => setFilter(f)}
               style={{
-                background: filter === f ? 'var(--bg-card-hover)' : 'transparent',
-                border: `1px solid ${filter === f ? 'var(--accent-cyan)' : 'var(--border-subtle)'}`,
-                color: filter === f ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                background: filter === f ? 'var(--bg-secondary)' : 'transparent',
+                border: `1px solid ${filter === f ? 'var(--accent-blue)' : 'var(--border-light)'}`,
+                color: filter === f ? 'var(--accent-blue)' : 'var(--text-secondary)',
                 fontSize: '0.72rem',
                 fontFamily: 'var(--font-mono)',
                 fontWeight: '600',
@@ -126,14 +126,14 @@ export default function HistoryDrawer({ isOpen, onClose, onSelectRecord }) {
               onClick={() => handleSelect(item.email_id)}
               style={{
                 background: 'var(--bg-card)',
-                border: '1px solid var(--border-subtle)',
+                border: '1px solid var(--border-light)',
                 borderRadius: 'var(--radius-md)',
                 padding: '12px',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                transition: 'all 0.15s ease',
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-cyan)')}
-              onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
+              onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--accent-blue)')}
+              onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-light)')}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                 <span className={`badge-tier ${item.risk_tier?.toLowerCase() || 'low'}`} style={{ fontSize: '0.7rem', padding: '2px 8px' }}>

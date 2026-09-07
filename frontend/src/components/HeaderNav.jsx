@@ -26,41 +26,6 @@ export default function HeaderNav({
           </div>
         </div>
 
-        {/* Backend Status & Capabilities */}
-        <div className="caps-pills">
-          <div className="pill-item" title="Backend Server Status">
-            <span className={`pill-dot ${isHealthy ? 'active' : 'warn'}`}></span>
-            API {isHealthy ? 'Online' : 'Offline'}
-          </div>
-
-          <div className="pill-item" title="Native QR Quishing Engine">
-            <span
-              className={`pill-dot ${
-                caps.qr_decoding === 'enabled' ? 'active' : 'warn'
-              }`}
-            ></span>
-            QR Engine
-          </div>
-
-          <div className="pill-item" title="Offline MaxMind Databases">
-            <span
-              className={`pill-dot ${
-                caps.geolocation === 'enabled' ? 'active' : 'warn'
-              }`}
-            ></span>
-            MaxMind DB
-          </div>
-
-          <div className="pill-item" title="SQLite Forensic History">
-            <span
-              className={`pill-dot ${
-                caps.history_persistence?.includes('enabled') ? 'active' : 'warn'
-              }`}
-            ></span>
-            SQLite
-          </div>
-        </div>
-
         {/* Action Buttons */}
         <div className="nav-actions">
           <button

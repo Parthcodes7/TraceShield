@@ -82,7 +82,7 @@ export default function AdversarialLab({ isOpen, onClose, onTestCompleted }) {
               <Zap size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)', color: '#fff' }}>
+              <h2 style={{ fontSize: '1.2rem', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
                 Module 7: Adversarial Red-Team Simulator
               </h2>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
@@ -117,13 +117,13 @@ export default function AdversarialLab({ isOpen, onClose, onTestCompleted }) {
                 style={{
                   padding: '12px',
                   borderRadius: 'var(--radius-md)',
-                  background: strategy === strat.id ? 'rgba(168, 85, 247, 0.12)' : 'var(--bg-secondary)',
-                  border: `1px solid ${strategy === strat.id ? '#c084fc' : 'var(--border-subtle)'}`,
+                  background: strategy === strat.id ? 'rgba(124, 58, 237, 0.08)' : 'var(--bg-secondary)',
+                  border: `1px solid ${strategy === strat.id ? 'var(--accent-purple)' : 'var(--border-light)'}`,
                   cursor: 'pointer',
-                  transition: 'all 0.2s ease',
+                  transition: 'all 0.15s ease',
                 }}
               >
-                <div style={{ fontWeight: '600', fontSize: '0.86rem', color: strategy === strat.id ? '#c084fc' : 'var(--text-primary)', marginBottom: '4px' }}>
+                <div style={{ fontWeight: '600', fontSize: '0.86rem', color: strategy === strat.id ? 'var(--accent-purple)' : 'var(--text-primary)', marginBottom: '4px' }}>
                   {strat.name}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.3' }}>
@@ -183,7 +183,7 @@ export default function AdversarialLab({ isOpen, onClose, onTestCompleted }) {
                 ) : (
                   <ShieldCheck size={20} style={{ color: 'var(--threat-med)' }} />
                 )}
-                <span style={{ fontWeight: 'bold', fontSize: '0.92rem', color: '#fff' }}>
+                <span style={{ fontWeight: 'bold', fontSize: '0.92rem', color: 'var(--text-primary)' }}>
                   {result.generated_sample_caught ? 'Evasion Neutralized (Sample Caught)' : 'Flagged for Human Review'}
                 </span>
               </div>
@@ -208,12 +208,12 @@ export default function AdversarialLab({ isOpen, onClose, onTestCompleted }) {
                       key={i}
                       style={{
                         padding: '3px 8px',
-                        background: 'rgba(255, 255, 255, 0.05)',
+                        background: 'var(--bg-card)',
                         border: '1px solid var(--border-light)',
                         borderRadius: 'var(--radius-sm)',
                         fontSize: '0.75rem',
                         fontFamily: 'var(--font-mono)',
-                        color: 'var(--accent-cyan)',
+                        color: 'var(--accent-blue)',
                       }}
                     >
                       {layer}

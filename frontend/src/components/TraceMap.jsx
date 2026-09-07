@@ -84,7 +84,7 @@ export default function TraceMap({ geolocation, relayChain }) {
     <div className="card">
       <div className="card-header">
         <h2 className="card-title">
-          <Globe size={20} style={{ color: 'var(--accent-cyan)' }} />
+          <Globe size={20} style={{ color: 'var(--accent-blue)' }} />
           3D Geographic Attribution & Routing
         </h2>
         {geolocation?.is_known_vpn_or_hosting && (
@@ -98,21 +98,21 @@ export default function TraceMap({ geolocation, relayChain }) {
       </div>
 
       {/* 3D Earth Canvas */}
-      <div className="map-container" style={{ position: 'relative', background: '#020408' }}>
+      <div className="map-container" style={{ position: 'relative', background: '#090d16' }}>
         <Canvas camera={{ position: [0, 0, 6], fov: 45 }}>
           <React.Suspense fallback={null}>
             <ambientLight intensity={2.0} />
             <directionalLight position={[0, 0, 10]} intensity={3.0} />
             <pointLight position={[10, 10, 10]} intensity={2.0} />
-            <Stars radius={50} depth={50} count={3000} factor={4} saturation={0} fade speed={1} />
+            <Stars radius={50} depth={50} count={2000} factor={3} saturation={0} fade speed={0.5} />
             <EarthGlobe lat={lat} lng={lng} hasCoords={hasCoords} />
             <OrbitControls enableZoom={true} enablePan={false} autoRotate={false} minDistance={3} maxDistance={10} />
           </React.Suspense>
         </Canvas>
         
-        {/* Radar Overlay text */}
-        <div style={{ position: 'absolute', bottom: '10px', left: '10px', zIndex: 10, color: 'rgba(0, 240, 255, 0.6)', fontFamily: 'var(--font-mono)', fontSize: '0.7rem' }}>
-          SAT-LINK ACTIVE // TRACKING ORIGIN
+        {/* Origin Status Overlay */}
+        <div style={{ position: 'absolute', bottom: '12px', left: '14px', zIndex: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.04em' }}>
+          GEOLOCATION ATTRIBUTION // ORIGIN MAPPED
         </div>
       </div>
 

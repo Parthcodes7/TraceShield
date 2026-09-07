@@ -124,7 +124,7 @@ export default function UploadModal({ isOpen, onClose, onAnalysisComplete }) {
     <div className="modal-overlay">
       <div className="modal-card">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
-          <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', color: '#fff' }}>
+          <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-display)', color: 'var(--text-primary)' }}>
             Submit Email For Forensic Intelligence Inspection
           </h2>
           <button

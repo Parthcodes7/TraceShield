@@ -226,7 +226,7 @@ export default function App() {
         {/* Quick Demo Selector Chips */}
         <div className="demo-bar">
           <div className="demo-bar-label">
-            <Sparkles size={16} style={{ color: 'var(--accent-cyan)' }} />
+            <Sparkles size={16} style={{ color: 'var(--accent-blue)' }} />
             One-Click Attack Vectors:
           </div>
 

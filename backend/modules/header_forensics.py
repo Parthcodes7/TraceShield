@@ -411,6 +411,9 @@ def analyze_headers(raw_email_bytes: bytes) -> dict:
         anomaly_flags_list.append(
             f"Dangerous attachment(s) detected: {', '.join(suspicious_attachments)}"
         )
+        
+    # Check if this email was scraped by the browser extension
+    is_extension_scrape = msg.get("X-TraceShield-Source") == "Extension-DOM-Scrape"
 
     return {
         # Protocol authentication
@@ -428,6 +431,7 @@ def analyze_headers(raw_email_bytes: bytes) -> dict:
         "attachment_hashes": attachment_hashes,
         # Anomaly flags
         "anomaly_flags": anomaly_flags_list,
+        "is_extension_scrape": is_extension_scrape,
         # Metadata (F2)
         **metadata,
     }

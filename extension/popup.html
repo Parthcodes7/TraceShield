@@ -14,16 +14,16 @@
         <div class="logo-box">🛡️</div>
         <div>
           <h1 class="brand-title">TRACESHIELD</h1>
-          <p class="brand-sub">AI Forensic Intelligence (SIH26106)</p>
+          <p class="brand-sub">Local Threat Intelligence Engine</p>
         </div>
       </div>
-      <div id="backend-status-pill" class="status-pill checking">
+      <div id="extension-status-pill" class="status-pill checking">
         <span class="status-dot"></span>
-        <span id="backend-status-text">Checking API...</span>
+        <span id="extension-status-text">Checking...</span>
       </div>
     </header>
 
-    <!-- Main Content Tabs / Actions -->
+    <!-- Main Content -->
     <main class="popup-body">
       <!-- In-Inbox Scanner Trigger -->
       <section class="action-card">
@@ -31,26 +31,26 @@
           <span class="card-icon">⚡</span>
           <span class="card-title">Gmail In-Inbox Scanner</span>
         </div>
-        <p class="card-desc">Scan the currently active email in your open Gmail tab for spoofing, quishing, and homoglyphs.</p>
+        <p class="card-desc">Scan the currently open email in Gmail for spoofing, lookalike domains, homoglyphs, and deceptive links.</p>
         <button id="btn-scan-tab" class="btn btn-primary">
           <span class="btn-text">Rescan Active Gmail Message</span>
         </button>
         <div id="tab-scan-feedback" class="feedback-msg"></div>
       </section>
 
-      <!-- Fast Text / URL Inspector -->
+      <!-- Fast Text Inspector -->
       <section class="action-card">
         <div class="card-header">
           <span class="card-icon">🔬</span>
-          <span class="card-title">Fast Threat Inspector</span>
+          <span class="card-title">Quick Threat Inspector</span>
         </div>
-        <p class="card-desc">Paste raw email text, headers, or suspicious message body:</p>
+        <p class="card-desc">Paste suspicious email text to analyze locally:</p>
         <textarea id="raw-input-textarea" class="text-input" rows="3" placeholder="From: support@bank0findia.co.in&#10;Subject: Urgent Security Alert&#10;&#10;Please verify your credentials immediately..."></textarea>
         <button id="btn-analyze-text" class="btn btn-secondary">
-          <span>Run Forensic Analysis</span>
+          <span>Run Local Analysis</span>
         </button>
 
-        <!-- Fast Analysis Results Card -->
+        <!-- Analysis Results Card -->
         <div id="quick-result-card" class="result-card" style="display: none;">
           <div class="result-header">
             <span id="res-tier-chip" class="tier-chip">High</span>
@@ -58,23 +58,30 @@
           </div>
           <div id="res-confidence" class="confidence-text">High Confidence: Protocol Verified</div>
           <div id="res-triggers" class="triggers-wrap"></div>
-          <button id="btn-download-quick-pdf" class="btn btn-outline" style="margin-top: 8px;">
-            Download 2-Page Evidence PDF
-          </button>
         </div>
       </section>
 
-      <!-- Quick Platform Links -->
+      <!-- Scan History -->
+      <section class="action-card" id="history-section">
+        <div class="card-header">
+          <span class="card-icon">📋</span>
+          <span class="card-title">Recent Scans</span>
+          <button id="btn-clear-history" class="btn-icon" title="Clear history">✕</button>
+        </div>
+        <div id="history-list" class="history-list">
+          <p class="card-desc" style="margin-bottom: 0;">No scans yet — open an email in Gmail to start.</p>
+        </div>
+      </section>
+
+      <!-- Footer -->
       <footer class="popup-footer">
-        <a id="link-open-dashboard" class="footer-link" href="http://localhost:5173" target="_blank" rel="noopener noreferrer">
-          Launch SOC Dashboard ↗
-        </a>
-        <span class="separator">•</span>
-        <span id="api-version-tag" class="footer-version">Backend v2.0.0</span>
+        <span class="footer-version">TraceShield v2.1.0 — Local Engine</span>
+        <span class="footer-badge">No Backend Required</span>
       </footer>
     </main>
   </div>
 
+  <script src="analysis.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

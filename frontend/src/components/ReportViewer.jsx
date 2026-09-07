@@ -232,17 +232,17 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
 
       {/* Tab 5: 3D Threat Topology */}
       {activeTab === 'topology' && (
-        <div style={{ width: '100%', height: '400px', background: '#020408', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ width: '100%', height: '400px', background: 'var(--bg-secondary)', borderRadius: '12px', overflow: 'hidden', position: 'relative' }}>
           <Canvas camera={{ position: [0, 2, 8], fov: 45 }}>
             <React.Suspense fallback={null}>
-              <ambientLight intensity={0.5} />
-              <pointLight position={[10, 10, 10]} intensity={1} color="#00f0ff" />
+              <ambientLight intensity={0.7} />
+              <pointLight position={[10, 10, 10]} intensity={1.5} color="#38bdf8" />
               <TopologyGraph record={record} />
-              <OrbitControls enableZoom={true} autoRotate autoRotateSpeed={1} />
+              <OrbitControls enableZoom={true} autoRotate autoRotateSpeed={0.8} />
             </React.Suspense>
           </Canvas>
-          <div style={{ position: 'absolute', top: '15px', left: '15px', color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', fontFamily: 'var(--font-mono)' }}>
-            [INTERACTIVE: DRAG TO ROTATE]
+          <div style={{ position: 'absolute', top: '15px', left: '15px', color: 'var(--text-muted)', fontSize: '0.75rem', fontFamily: 'var(--font-mono)' }}>
+            INTERACTIVE TOPOLOGY // DRAG TO ORBIT
           </div>
         </div>
       )}

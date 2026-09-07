@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "TraceShield — AI Email Threat Radar",
-  "version": "2.0.0",
-  "description": "Real-time AI email threat detection, protocol forensics, lookalike domain & quishing scanner for Gmail (SIH26106).",
+  "version": "2.1.0",
+  "description": "Self-contained email threat detection: lookalike domains, homoglyphs, credential phishing, URL deception & urgency analysis — all running locally in your browser.",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
@@ -13,9 +13,7 @@
     "storage"
   ],
   "host_permissions": [
-    "https://mail.google.com/*",
-    "http://localhost:8000/*",
-    "http://127.0.0.1:8000/*"
+    "https://mail.google.com/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -32,6 +30,7 @@
         "https://mail.google.com/*"
       ],
       "js": [
+        "analysis.js",
         "content.js"
       ],
       "css": [

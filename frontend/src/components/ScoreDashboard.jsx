@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -11,121 +11,121 @@ import {
   Sparkles,
   Bot
 } from 'lucide-react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, MeshDistortMaterial, Float } from '@react-three/drei';
-import * as THREE from 'three';
 
-function HolographicCore({ score, color }) {
-  const group = useRef();
-  
-  // Speed is higher if score is high
-  const speed = score > 60 ? 4 : (score > 30 ? 2 : 1);
-  const distort = score > 60 ? 0.6 : 0.2;
-
-  useFrame((state, delta) => {
-    if (group.current) {
-      group.current.rotation.y += delta * (speed * 0.5);
-      group.current.rotation.z += delta * (speed * 0.2);
-    }
-  });
-
+function HighlightedText({ text }) {
+  if (!text) return null;
+  const regex = /(CRITICAL ALERT|HIGH-RISK|PHISHING|FRAUD|FAILED|quarantine|blocking|\bthreat\b|spoofing|Verified|Low Risk|intact|authorized|safe)/gi;
+  const parts = text.split(regex);
   return (
-    <group ref={group}>
-      <Float speed={speed} rotationIntensity={0.5} floatIntensity={1}>
-        <mesh>
-          <sphereGeometry args={[1.5, 64, 64]} />
-          <MeshDistortMaterial 
-            color="#080c14"
-            emissive={color}
-            emissiveIntensity={1.5}
-            roughness={0.2}
-            metalness={0.8}
-            distort={distort}
-            speed={speed}
-            wireframe={score > 60}
-          />
-        </mesh>
-        
-        {/* Outer containment rings */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[1.8, 1.85, 64]} />
-          <meshBasicMaterial color={color} transparent opacity={0.5} side={THREE.DoubleSide} />
-        </mesh>
-        <mesh rotation={[Math.PI / 2.5, Math.PI / 4, 0]}>
-          <ringGeometry args={[2.2, 2.22, 64]} />
-          <meshBasicMaterial color={color} transparent opacity={0.3} side={THREE.DoubleSide} />
-        </mesh>
-      </Float>
-    </group>
+    <span>
+      {parts.map((part, idx) => {
+        const lower = part.toLowerCase();
+        if (['verified', 'low risk', 'intact', 'authorized', 'safe'].includes(lower)) {
+          return (
+            <span key={idx} style={{ color: 'var(--threat-low)', fontWeight: 600 }}>
+              {part}
+            </span>
+          );
+        }
+        if (['critical alert', 'high-risk', 'phishing', 'fraud', 'failed', 'quarantine', 'blocking', 'threat', 'spoofing'].includes(lower)) {
+          return (
+            <span key={idx} style={{ color: 'var(--threat-high)', fontWeight: 600 }}>
+              {part}
+            </span>
+          );
+        }
+        return part;
+      })}
+    </span>
   );
-}
-
-function TypewriterText({ text, speed = 10 }) {
-  const [displayedText, setDisplayedText] = useState('');
-  
-  useEffect(() => {
-    setDisplayedText('');
-    let i = 0;
-    const interval = setInterval(() => {
-      setDisplayedText(text.slice(0, i));
-      i++;
-      if (i > text.length) clearInterval(interval);
-    }, speed);
-    return () => clearInterval(interval);
-  }, [text, speed]);
-
-  const highlightKeywords = (str) => {
-    const keywords = ['CRITICAL ALERT', 'HIGH-RISK', 'PHISHING', 'FRAUD', 'FAILED', 'quarantine', 'blocking', 'threat', 'spoofing'];
-    let result = str;
-    keywords.forEach(kw => {
-      const regex = new RegExp(`(${kw})`, 'gi');
-      result = result.replace(regex, '<span style="color: #ff3344; font-weight: bold; text-shadow: 0 0 5px #ff3344;">$1</span>');
-    });
-    const passKeywords = ['Verified', 'Low Risk', 'intact', 'authorized', 'safe'];
-    passKeywords.forEach(kw => {
-      const regex = new RegExp(`(${kw})`, 'gi');
-      result = result.replace(regex, '<span style="color: #00f0ff; font-weight: bold; text-shadow: 0 0 5px #00f0ff;">$1</span>');
-    });
-    return result;
-  };
-
-  return <span dangerouslySetInnerHTML={{ __html: highlightKeywords(displayedText) }} />;
 }
 
 function ThreatIndicator({ reason }) {
   const [showTooltip, setShowTooltip] = useState(false);
-  
+
   let explanation = "Suspicious anomaly deviating from secure communication protocols.";
-  if (reason.includes("SPF")) explanation = "The sender's IP address is not authorized by the domain owner. Highly indicative of an offshore server spoofing the brand.";
-  if (reason.includes("DMARC")) explanation = "The domain enforces strict anti-spoofing policies, but this email failed alignment, proving it is a forged payload.";
-  if (reason.includes("Reply-To")) explanation = "The attacker is spoofing the 'From' address to look trusted, while secretly routing your replies to their own shadow inbox.";
-  if (reason.includes("short relay")) explanation = "Legitimate enterprise emails pass through multiple verifiable routing hops. This email was directly injected, bypassing origin tracking.";
-  if (reason.includes("urgency trigger")) explanation = "Phishing attacks use urgency triggers ('URGENT', 'Action Required') to induce panic, bypassing the victim's critical thinking.";
+  if (reason.includes("SPF")) {
+    explanation = "The sender's IP address is not authorized by the domain owner. Highly indicative of an offshore server spoofing the brand.";
+  } else if (reason.includes("DKIM")) {
+    explanation = "Cryptographic signature validation failed, indicating the message body or headers were altered in transit.";
+  } else if (reason.includes("DMARC")) {
+    explanation = "The domain enforces strict anti-spoofing policies, but this email failed alignment, proving it is an unauthorized payload.";
+  } else if (reason.includes("Reply-To")) {
+    explanation = "The attacker is spoofing the 'From' address to look trusted, while secretly routing your replies to their own shadow inbox.";
+  } else if (reason.includes("homoglyph")) {
+    explanation = "Punycode/Cyrillic character substitution used to mimic a reputable domain name and deceive recipient visual checks.";
+  } else if (reason.includes("QR") || reason.includes("quishing")) {
+    explanation = "Malicious or disguised destination URL embedded within a QR image to bypass conventional email gateway filters.";
+  } else if (reason.includes("attachment")) {
+    explanation = "High-risk file extension identified (e.g. script, executable, or macro) frequently leveraged for malware delivery.";
+  } else if (reason.includes("short relay")) {
+    explanation = "Legitimate enterprise emails pass through multiple verifiable routing hops. This email was directly injected, bypassing origin tracking.";
+  } else if (reason.includes("urgency trigger") || reason.includes("urgency")) {
+    explanation = "Phishing attacks use psychological pressure ('URGENT', 'Action Required') to induce panic and bypass critical verification.";
+  } else if (reason.includes("Credential") || reason.includes("OTP")) {
+    explanation = "Message requests passwords, OTP codes, or banking verification, indicating an active credential harvesting campaign.";
+  }
 
   return (
     <div 
       className="reason-tag threat" 
-      style={{ position: 'relative', cursor: 'help' }}
+      style={{ position: 'relative', cursor: 'pointer' }}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
       <XCircle size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
       <span>{reason}</span>
-      <Info size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)' }} />
-      
+      <Info size={14} style={{ marginLeft: 'auto', color: 'var(--text-muted)', flexShrink: 0 }} />
+
       {showTooltip && (
         <div style={{
-          position: 'absolute', bottom: '100%', left: '50%', transform: 'translateX(-50%)',
-          width: '280px', background: 'var(--bg-secondary)', border: '1px solid var(--accent-purple)',
-          boxShadow: '0 5px 15px rgba(0,0,0,0.5)', padding: '10px', borderRadius: '8px',
-          zIndex: 100, marginBottom: '8px', color: 'var(--text-primary)', fontSize: '0.8rem',
-          lineHeight: '1.4', fontFamily: 'var(--font-main)', textTransform: 'none'
+          position: 'absolute',
+          bottom: 'calc(100% + 8px)',
+          right: '0px',
+          width: '300px',
+          background: '#ffffff',
+          border: '1px solid var(--border-light)',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08)',
+          padding: '12px 14px',
+          borderRadius: '10px',
+          zIndex: 9999,
+          color: 'var(--text-primary)',
+          fontSize: '0.8rem',
+          lineHeight: '1.5',
+          fontFamily: 'var(--font-main)',
+          textTransform: 'none',
+          pointerEvents: 'none',
+          animation: 'fadeIn 0.15s ease-out',
         }}>
-          <strong style={{ color: 'var(--accent-purple)', display: 'block', marginBottom: '4px' }}>
-            <Sparkles size={12} style={{ marginRight: '4px', display: 'inline-block', verticalAlign: 'middle' }} />
-            XAI Threat Translation
-          </strong>
-          {explanation}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', color: 'var(--accent-blue)', fontWeight: 600 }}>
+            <Info size={14} />
+            Threat Explanation
+          </div>
+          <div style={{ color: 'var(--text-secondary)' }}>
+            {explanation}
+          </div>
+          {/* Bottom pointer arrow */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-6px',
+            right: '16px',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid #ffffff',
+          }} />
+          <div style={{
+            position: 'absolute',
+            bottom: '-7px',
+            right: '16px',
+            width: 0,
+            height: 0,
+            borderLeft: '6px solid transparent',
+            borderRight: '6px solid transparent',
+            borderTop: '6px solid var(--border-light)',
+            zIndex: -1,
+          }} />
         </div>
       )}
     </div>
@@ -175,25 +175,28 @@ export default function ScoreDashboard({ record }) {
         </span>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '24px', alignItems: 'center' }}>
-        {/* 3D Holographic Threat Core */}
+      <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '24px', alignItems: 'center' }}>
+        {/* SVG Radial Gauge */}
         <div>
-          <div className="gauge-wrapper" style={{ width: '220px', height: '220px', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
-              <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
-                <React.Suspense fallback={null}>
-                  <ambientLight intensity={0.5} />
-                  <pointLight position={[10, 10, 10]} intensity={1} color={strokeColor} />
-                  <HolographicCore score={score} color={strokeColor} />
-                  <OrbitControls enableZoom={false} enablePan={false} autoRotate={false} />
-                </React.Suspense>
-              </Canvas>
-            </div>
-            <div className="gauge-center-text" style={{ zIndex: 2, pointerEvents: 'none' }}>
-              <div className="gauge-score" style={{ color: strokeColor, textShadow: `0 0 10px ${strokeColor}` }}>
+          <div className="gauge-wrapper" style={{ width: '200px', height: '200px' }}>
+            <svg className="gauge-svg" viewBox="0 0 160 160">
+              <circle
+                className="gauge-bg-circle"
+                cx="80" cy="80" r={radius}
+              />
+              <circle
+                className="gauge-progress-circle"
+                cx="80" cy="80" r={radius}
+                stroke={strokeColor}
+                strokeDasharray={circumference}
+                strokeDashoffset={strokeDashoffset}
+              />
+            </svg>
+            <div className="gauge-center-text">
+              <div className="gauge-score" style={{ color: strokeColor }}>
                 {score}
               </div>
-              <div className="gauge-score-sub" style={{ textShadow: '0 0 5px #000' }}>RISK INDEX</div>
+              <div className="gauge-score-sub">RISK INDEX</div>
             </div>
           </div>
         </div>
@@ -202,30 +205,25 @@ export default function ScoreDashboard({ record }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', height: '100%', justifyContent: 'center' }}>
           
           <div style={{
-            background: 'linear-gradient(145deg, rgba(16, 24, 39, 0.9) 0%, rgba(30, 20, 50, 0.9) 100%)',
-            border: '1px solid rgba(139, 92, 246, 0.4)',
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-light)',
             borderRadius: 'var(--radius-lg)',
             padding: '16px 20px',
-            boxShadow: '0 0 15px rgba(139, 92, 246, 0.1)',
-            position: 'relative',
-            overflow: 'hidden'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-              <Bot size={18} style={{ color: 'var(--accent-cyan)' }} />
-              <h3 style={{ fontSize: '0.9rem', color: 'var(--accent-cyan)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)' }}>
+              <Bot size={18} style={{ color: 'var(--accent-blue)' }} />
+              <h3 style={{ fontSize: '0.85rem', color: 'var(--text-primary)', textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontWeight: 600 }}>
                 AI Executive Briefing
               </h3>
             </div>
-            <div style={{ fontSize: '0.92rem', lineHeight: '1.6', color: 'var(--text-primary)', minHeight: '80px', fontFamily: 'var(--font-mono)' }}>
-              <TypewriterText text={scoring.llm_summary} speed={15} />
-              <span className="cursor-blink" style={{ display: 'inline-block', width: '8px', height: '15px', background: 'var(--accent-cyan)', verticalAlign: 'middle', marginLeft: '4px', animation: 'blink 1s step-end infinite' }}></span>
+            <div style={{ fontSize: '0.88rem', lineHeight: '1.6', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              <HighlightedText text={scoring.llm_summary} />
             </div>
           </div>
 
           <div className="confidence-box" style={{ margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span className="confidence-label">Calibration Engine</span>
-              <Sparkles size={14} style={{ color: 'var(--text-muted)' }} />
             </div>
             <span
               className={`confidence-badge ${
@@ -261,7 +259,7 @@ export default function ScoreDashboard({ record }) {
                 background:
                   (breakdown.header_authentication?.points ?? 0) > 15
                     ? 'var(--threat-high)'
-                    : 'var(--accent-cyan)',
+                    : 'var(--accent-blue)',
               }}
             ></div>
           </div>
@@ -288,7 +286,7 @@ export default function ScoreDashboard({ record }) {
                 background:
                   (breakdown.content_threats?.points ?? 0) > 20
                     ? 'var(--threat-high)'
-                    : 'var(--accent-purple)',
+                    : 'var(--accent-blue)',
               }}
             ></div>
           </div>

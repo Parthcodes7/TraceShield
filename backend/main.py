@@ -178,6 +178,7 @@ class HeaderForensics(BaseModel):
     date_header: Optional[str] = None
     return_path: Optional[str] = None
     message_id: Optional[str] = None
+    is_extension_scrape: bool = False
 
 
 class HomoglyphDomain(BaseModel):

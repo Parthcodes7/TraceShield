@@ -1,40 +1,16 @@
 /**
  * TraceShield — Chrome Browser Extension (Manifest V3)
  * Content Script for Gmail in-inbox threat analysis & forensic badging.
- * Conforms to SIH26106 Build Specification.
+ * Self-contained: all analysis runs locally via analysis.js — no backend required.
  */
 
 (function () {
   'use strict';
 
-  const BACKEND_URL = 'http://localhost:8000';
-  const FRONTEND_URL = 'http://localhost:5173';
   const SCANNED_ATTR = 'data-traceshield-scanned';
   const analysisCache = new Map();
 
-  console.log('[TraceShield] Gmail Content Script Loaded.');
-
-  /**
-   * Builds an RFC 822 email payload from extracted DOM components.
-   */
-  function buildMimePayload(senderName, senderEmail, subject, bodyText, bodyHtml) {
-    const cleanSender = senderEmail || 'unknown@sender.com';
-    const cleanName = senderName ? `"${senderName.replace(/"/g, '')}"` : cleanSender;
-    const dateStr = new Date().toUTCString();
-
-    const headers = [
-      `From: ${cleanName} <${cleanSender}>`,
-      `Subject: ${subject || 'No Subject'}`,
-      `Date: ${dateStr}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: text/html; charset=UTF-8`,
-      `X-Mailer: TraceShield-Extension-V2`,
-      '',
-      bodyHtml || bodyText || 'Empty email body'
-    ];
-
-    return headers.join('\r\n');
-  }
+  console.log('[TraceShield] Gmail Content Script Loaded (Local Analysis Mode).');
 
   /**
    * Extracts visible email data from a Gmail email message card container.
@@ -60,69 +36,52 @@
     const bodyText = bodyEl?.innerText?.trim() || '';
     const bodyHtml = bodyEl?.innerHTML || '';
 
+    // 4. Reply-To (check for visible "Reply-To" indicator in Gmail)
+    let replyTo = '';
+    const headerArea = messageEl.querySelector('.ajy');
+    if (headerArea) {
+      const spans = headerArea.querySelectorAll('span');
+      for (const span of spans) {
+        if (span.textContent.toLowerCase().includes('reply-to:')) {
+          const emailSpan = span.closest('tr')?.querySelector('span[email]');
+          if (emailSpan) replyTo = emailSpan.getAttribute('email') || '';
+        }
+      }
+    }
+
+    // 5. Attachments (detect Gmail attachment chips)
+    const attachmentNames = [];
+    const attachmentEls = messageEl.querySelectorAll('.aZo .aV3, .aQH .aV3, [download_url]');
+    attachmentEls.forEach(el => {
+      const name = el.getAttribute('aria-label') || el.textContent?.trim() || '';
+      if (name) attachmentNames.push(name);
+    });
+    // Also try download_url pattern
+    messageEl.querySelectorAll('[download_url]').forEach(el => {
+      const downloadUrl = el.getAttribute('download_url') || '';
+      const parts = downloadUrl.split(':');
+      if (parts.length > 1) {
+        const fname = parts[0].split('/').pop();
+        if (fname && !attachmentNames.includes(fname)) attachmentNames.push(fname);
+      }
+    });
+
     return {
       senderName,
       senderEmail,
       subject,
       bodyText,
       bodyHtml,
+      replyTo,
+      attachmentNames,
       hasContent: Boolean(senderEmail || subject || bodyText),
     };
   }
 
   /**
-   * Queries TraceShield FastAPI backend /analyze endpoint.
-   */
-  async function queryTraceShieldAnalysis(rawEmailMime) {
-    const res = await fetch(`${BACKEND_URL}/analyze`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ raw_email: rawEmailMime }),
-    });
-
-    if (!res.ok) {
-      throw new Error(`TraceShield API error: ${res.status} ${res.statusText}`);
-    }
-
-    return await res.json();
-  }
-
-  /**
-   * Generates a 2-page forensic PDF dossier and downloads it directly.
-   */
-  async function downloadEvidencePdf(record) {
-    try {
-      const res = await fetch(`${BACKEND_URL}/report`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(record),
-      });
-
-      if (!res.ok) throw new Error('Failed to generate report PDF');
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `TraceShield_Evidence_${record.email_id.slice(0, 8)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('[TraceShield] PDF download failed:', err);
-      alert('Failed to download forensic PDF report. Ensure TraceShield backend is running.');
-    }
-  }
-
-  /**
    * Injects the threat evaluation banner into the email DOM.
    */
-  function injectThreatBanner(targetInsertionEl, analysisRecord, rawEmailMime) {
+  function injectThreatBanner(targetInsertionEl, analysisRecord) {
     // Remove any existing banner in this container
     const existing = targetInsertionEl.parentNode?.querySelector('.traceshield-banner');
     if (existing) existing.remove();
@@ -131,38 +90,43 @@
     const scoring = analysisRecord.scoring || {};
     const riskScore = scoring.final_risk_score ?? 0;
     const riskTier = (scoring.risk_tier || 'Low').toLowerCase();
-    const confidenceLevel = scoring.confidence_level || 'Moderate Confidence';
+    const confidenceLevel = scoring.confidence_level || 'Low Risk';
     const confidenceReason = scoring.confidence_reason || '';
-    const llmSummary = scoring.llm_summary || '';
 
-    const header = analysisRecord.header_forensics || {};
-    const content = analysisRecord.content_analysis || {};
-    const geo = analysisRecord.geolocation || {};
+    const sender = analysisRecord.senderIdentity || {};
+    const domains = analysisRecord.domainAnalysis || {};
+    const urls = analysisRecord.urlAnalysis || {};
+    const language = analysisRecord.languageAnalysis || {};
+    const allFlags = analysisRecord.allFlags || [];
 
     banner.className = `traceshield-banner tier-${riskTier}`;
 
     // Collect highlight badges
     const triggers = [];
-    if (content.lookalike_domains_found?.length > 0) {
-      triggers.push(`Lookalike Domain: ${content.lookalike_domains_found[0]}`);
+    if (domains.lookalikeDomainsFound?.length > 0) {
+      const first = domains.lookalikeDomainsFound[0];
+      triggers.push(`Lookalike Domain: "${first.suspicious}" mimics ${first.brand}`);
     }
-    if (content.homoglyph_domains_found?.some((h) => h.suspicious)) {
+    if (domains.homoglyphDomainsFound?.some(h => h.suspicious)) {
       triggers.push('Punycode / Homoglyph Detected');
     }
-    if (content.qr_codes_found?.length > 0) {
-      triggers.push('QR Quishing Attack Embedded');
-    }
-    if (content.credential_harvesting_detected) {
+    if (language.credentialHarvestingDetected) {
       triggers.push('Credential Harvesting Phrasing');
     }
-    if (header.reply_to_mismatch) {
-      triggers.push('Reply-To Domain Redirection Mismatch');
+    if (sender.replyToMismatch) {
+      triggers.push('Reply-To Domain Mismatch');
     }
-    if (header.display_name_spoof) {
-      triggers.push('High-Target Brand Display Spoofing');
+    if (sender.displayNameSpoof) {
+      triggers.push(`Brand Spoofing: ${sender.spoofedBrand}`);
     }
-    if (geo.is_known_vpn_or_hosting) {
-      triggers.push(`Cloud/VPN Infrastructure (${geo.origin_isp || 'Hosting'})`);
+    if (urls.displayHrefMismatches?.length > 0) {
+      triggers.push('Deceptive Link Detected');
+    }
+    if (urls.urlShortenersFound?.length > 0) {
+      triggers.push('URL Shortener Hiding Destination');
+    }
+    if (language.urgencyScore > 0.4) {
+      triggers.push(`Urgency Score: ${Math.round(language.urgencyScore * 100)}%`);
     }
 
     const tierTitle =
@@ -172,13 +136,15 @@
         ? 'SUSPICIOUS'
         : 'AUTHENTIC';
 
+    const scoreColor = riskTier === 'high' ? '#dc2626' : riskTier === 'medium' ? '#d97706' : '#059669';
+
     banner.innerHTML = `
       <div class="traceshield-header-row">
         <div class="traceshield-brand-wrap">
           <div class="traceshield-logo-badge">🛡️</div>
           <div class="traceshield-brand-title">
             TRACESHIELD RADAR
-            <span class="traceshield-tag">SIH26106</span>
+            <span class="traceshield-tag">LOCAL</span>
           </div>
         </div>
         <div class="traceshield-status-chip chip-${riskTier}">
@@ -188,9 +154,7 @@
       </div>
 
       <div class="traceshield-metrics-row">
-        <div class="traceshield-score-badge" style="color: ${
-          riskTier === 'high' ? '#ef4444' : riskTier === 'medium' ? '#f59e0b' : '#10b981'
-        }">
+        <div class="traceshield-score-badge" style="color: ${scoreColor}">
           ${riskScore} <span class="score-max">/ 100</span>
         </div>
         <div class="traceshield-confidence-label">
@@ -201,20 +165,14 @@
       ${
         triggers.length > 0
           ? `<div class="traceshield-triggers-list">
-              ${triggers.map((t) => `<span class="traceshield-trigger-tag">⚠️ ${t}</span>`).join('')}
+              ${triggers.map(t => `<span class="traceshield-trigger-tag">⚠️ ${t}</span>`).join('')}
              </div>`
           : `<div class="traceshield-triggers-list">
-              <span class="traceshield-trigger-tag tag-safe">✓ Cryptographic checks passed & no malicious vectors found</span>
+              <span class="traceshield-trigger-tag tag-safe">✓ No deceptive patterns detected in visible content</span>
              </div>`
       }
 
       <div class="traceshield-actions-row">
-        <a class="traceshield-btn traceshield-btn-primary" href="${FRONTEND_URL}" target="_blank" rel="noopener noreferrer">
-          Open in TraceShield SOC ↗
-        </a>
-        <button class="traceshield-btn traceshield-btn-secondary traceshield-download-pdf-btn" type="button">
-          Download Evidence PDF
-        </button>
         <button class="traceshield-btn traceshield-btn-secondary traceshield-toggle-details-btn" type="button">
           Forensic Details ▾
         </button>
@@ -223,29 +181,33 @@
       <div class="traceshield-details-pane" style="display: none;">
         <div class="traceshield-grid-2">
           <div>
-            <div class="traceshield-field-label">Header Cryptography</div>
-            <div class="traceshield-field-val">SPF: ${header.spf_result || 'N/A'} | DKIM: ${header.dkim_result || 'N/A'} | DMARC: ${header.dmarc_result || 'N/A'}</div>
+            <div class="traceshield-field-label">Analysis Mode</div>
+            <div class="traceshield-field-val">Extension Local (No Backend)</div>
           </div>
           <div>
-            <div class="traceshield-field-label">Origin Attribution</div>
-            <div class="traceshield-field-val">${geo.origin_country || 'Unknown'} (${geo.origin_ip || 'No Public IP'})</div>
+            <div class="traceshield-field-label">Sender Domain</div>
+            <div class="traceshield-field-val">${sender.senderDomain || 'N/A'}</div>
           </div>
           <div>
-            <div class="traceshield-field-label">Linguistic Urgency NLP</div>
-            <div class="traceshield-field-val">${Math.round((content.urgency_score || 0) * 100)}% Urgency Probability</div>
+            <div class="traceshield-field-label">Urgency Score</div>
+            <div class="traceshield-field-val">${Math.round((language.urgencyScore || 0) * 100)}%</div>
           </div>
           <div>
-            <div class="traceshield-field-label">Chain of Custody SHA-256</div>
-            <div class="traceshield-field-val" title="${analysisRecord.raw_email_hash}">${(analysisRecord.raw_email_hash || '').slice(0, 16)}...</div>
+            <div class="traceshield-field-label">Links Scanned</div>
+            <div class="traceshield-field-val">${urls.totalLinks || 0} links analyzed</div>
           </div>
         </div>
+        ${allFlags.length > 0 ? `
+        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.08);">
+          <div class="traceshield-field-label" style="margin-bottom: 4px;">All Signals Detected</div>
+          <ul style="margin: 0; padding-left: 16px; color: #94a3b8; font-size: 11px;">
+            ${allFlags.map(f => `<li style="margin-bottom: 2px;">${f}</li>`).join('')}
+          </ul>
+        </div>` : ''}
       </div>
     `;
 
-    // Wire up actions
-    const downloadBtn = banner.querySelector('.traceshield-download-pdf-btn');
-    downloadBtn.addEventListener('click', () => downloadEvidencePdf(analysisRecord));
-
+    // Wire up toggle
     const toggleBtn = banner.querySelector('.traceshield-toggle-details-btn');
     const detailsPane = banner.querySelector('.traceshield-details-pane');
     toggleBtn.addEventListener('click', () => {
@@ -256,10 +218,13 @@
 
     // Insert before target
     targetInsertionEl.parentNode.insertBefore(banner, targetInsertionEl);
+
+    // Save to storage for popup history
+    saveToHistory(analysisRecord);
   }
 
   /**
-   * Injects an offline / scanning placeholder banner.
+   * Injects a scanning placeholder banner.
    */
   function injectPlaceholderBanner(targetInsertionEl, statusText) {
     const existing = targetInsertionEl.parentNode?.querySelector('.traceshield-banner');
@@ -273,7 +238,7 @@
           <div class="traceshield-logo-badge">🛡️</div>
           <div class="traceshield-brand-title">
             TRACESHIELD RADAR
-            <span class="traceshield-tag">SIH26106</span>
+            <span class="traceshield-tag">LOCAL</span>
           </div>
         </div>
         <div class="traceshield-status-chip chip-scanning">
@@ -287,9 +252,32 @@
   }
 
   /**
+   * Save analysis result to chrome.storage for popup history.
+   */
+  function saveToHistory(record) {
+    try {
+      chrome.storage?.local?.get(['scanHistory'], (result) => {
+        const history = result.scanHistory || [];
+        const entry = {
+          timestamp: record.analyzedAt,
+          sender: record.senderIdentity?.senderEmail || 'Unknown',
+          subject: '',
+          riskScore: record.scoring?.final_risk_score ?? 0,
+          riskTier: record.scoring?.risk_tier || 'Low',
+          triggerCount: record.allFlags?.length || 0,
+        };
+        history.unshift(entry);
+        // Keep max 20 entries
+        if (history.length > 20) history.length = 20;
+        chrome.storage.local.set({ scanHistory: history });
+      });
+    } catch { /* chrome.storage not available in testing */ }
+  }
+
+  /**
    * Scans a specific email message element in Gmail.
    */
-  async function processEmailMessage(messageEl) {
+  function processEmailMessage(messageEl) {
     if (messageEl.hasAttribute(SCANNED_ATTR)) return;
 
     const emailData = extractEmailData(messageEl);
@@ -309,39 +297,21 @@
 
     if (analysisCache.has(cacheKey)) {
       messageEl.setAttribute(SCANNED_ATTR, 'done');
-      injectThreatBanner(bodyTarget, analysisCache.get(cacheKey), '');
+      injectThreatBanner(bodyTarget, analysisCache.get(cacheKey));
       return;
     }
 
-    const placeholder = injectPlaceholderBanner(bodyTarget, 'Scanning Forensics & Protocols...');
-    const rawMime = buildMimePayload(
-      emailData.senderName,
-      emailData.senderEmail,
-      emailData.subject,
-      emailData.bodyText,
-      emailData.bodyHtml
-    );
+    injectPlaceholderBanner(bodyTarget, 'Analyzing Threat Signals...');
 
+    // Run local analysis (synchronous — no network call)
     try {
-      const record = await queryTraceShieldAnalysis(rawMime);
+      const record = TraceShieldAnalysis.analyze(emailData);
       analysisCache.set(cacheKey, record);
       messageEl.setAttribute(SCANNED_ATTR, 'done');
-      injectThreatBanner(bodyTarget, record, rawMime);
+      injectThreatBanner(bodyTarget, record);
     } catch (err) {
-      console.warn('[TraceShield] Backend connection failed:', err);
-      placeholder.className = 'traceshield-banner tier-medium';
-      placeholder.innerHTML = `
-        <div class="traceshield-header-row">
-          <div class="traceshield-brand-wrap">
-            <div class="traceshield-logo-badge">🛡️</div>
-            <div class="traceshield-brand-title">TRACESHIELD RADAR</div>
-          </div>
-          <div class="traceshield-status-chip chip-medium">BACKEND DISCONNECTED</div>
-        </div>
-        <div style="margin-top: 8px; font-size: 11px; color: #94a3b8;">
-          Ensure local API server is running: <code style="color: #38bdf8;">python -m uvicorn main:app --reload</code> on port 8000.
-        </div>
-      `;
+      console.error('[TraceShield] Local analysis failed:', err);
+      messageEl.setAttribute(SCANNED_ATTR, 'error');
     }
   }
 
@@ -349,8 +319,7 @@
    * Observe DOM mutations to catch opened email threads dynamically.
    */
   function setupObserver() {
-    const observer = new MutationObserver((mutations) => {
-      // Find Gmail message bodies
+    const observer = new MutationObserver(() => {
       const messages = document.querySelectorAll('.adn.ads, .gA.gt, div[role="main"] .adn');
       messages.forEach((msg) => {
         if (!msg.hasAttribute(SCANNED_ATTR)) {
@@ -374,9 +343,15 @@
       document.querySelectorAll(`[${SCANNED_ATTR}]`).forEach((el) => {
         el.removeAttribute(SCANNED_ATTR);
       });
+      analysisCache.clear();
       const messages = document.querySelectorAll('.adn.ads, .gA.gt, div[role="main"] .adn');
       messages.forEach(processEmailMessage);
       sendResponse({ status: 'RESCAN_TRIGGERED' });
+    } else if (request.action === 'GET_CURRENT_ANALYSIS') {
+      // Return the most recent analysis for the popup
+      const lastKey = [...analysisCache.keys()].pop();
+      const lastRecord = lastKey ? analysisCache.get(lastKey) : null;
+      sendResponse({ record: lastRecord });
     }
     return true;
   });

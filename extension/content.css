@@ -1,263 +1,251 @@
-/* TraceShield Gmail In-Inbox Forensics Banner Styles */
+/* TraceShield Gmail In-Inbox Banner — Clean Professional Theme */
 
 .traceshield-banner {
-  margin: 12px 0 16px 0;
-  padding: 14px 18px;
-  background: #0b1324;
-  background: linear-gradient(135deg, #0a1120 0%, #0f1c33 100%);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
-  color: #e2e8f0;
+  margin: 10px 0 14px 0;
+  padding: 12px 16px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1f2937;
   font-size: 13px;
-  line-height: 1.4;
+  line-height: 1.5;
   position: relative;
   z-index: 100;
-  transition: all 0.25s ease;
 }
 
 .traceshield-banner.tier-high {
-  border-color: rgba(239, 68, 68, 0.5);
-  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.15);
+  border-color: #fca5a5;
+  border-left: 4px solid #dc2626;
 }
 
 .traceshield-banner.tier-medium {
-  border-color: rgba(245, 158, 11, 0.5);
-  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.15);
+  border-color: #fde68a;
+  border-left: 4px solid #d97706;
 }
 
 .traceshield-banner.tier-low {
-  border-color: rgba(16, 185, 129, 0.4);
-  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.1);
+  border-color: #a7f3d0;
+  border-left: 4px solid #059669;
 }
 
+/* ─── Header Row ─── */
 .traceshield-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
 .traceshield-brand-wrap {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
 }
 
 .traceshield-logo-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: rgba(0, 240, 255, 0.12);
-  border: 1px solid rgba(0, 240, 255, 0.4);
-  border-radius: 7px;
-  color: #00f0ff;
-  font-weight: 800;
-  font-size: 14px;
+  width: 26px;
+  height: 26px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 6px;
+  font-size: 13px;
 }
 
 .traceshield-brand-title {
-  font-weight: 700;
+  font-weight: 600;
   font-size: 13px;
-  letter-spacing: 0.5px;
-  color: #f8fafc;
+  color: #111827;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .traceshield-brand-title .traceshield-tag {
   font-size: 10px;
-  padding: 2px 6px;
-  background: rgba(0, 240, 255, 0.15);
-  color: #00f0ff;
-  border-radius: 4px;
+  padding: 1px 5px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border-radius: 3px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-weight: 600;
+  letter-spacing: 0.3px;
+  font-weight: 500;
+  border: 1px solid #e5e7eb;
 }
 
+/* ─── Status Chip ─── */
 .traceshield-status-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-weight: 700;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-weight: 600;
   font-size: 11px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .traceshield-status-chip.chip-high {
-  background: rgba(239, 68, 68, 0.2);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.5);
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
 }
 
 .traceshield-status-chip.chip-medium {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.5);
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
 }
 
 .traceshield-status-chip.chip-low {
-  background: rgba(16, 185, 129, 0.2);
-  color: #34d399;
-  border: 1px solid rgba(16, 185, 129, 0.5);
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
 }
 
 .traceshield-status-chip.chip-scanning {
-  background: rgba(0, 240, 255, 0.15);
-  color: #38bdf8;
-  border: 1px solid rgba(0, 240, 255, 0.4);
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
 }
 
 .traceshield-radar-dot {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px currentColor;
-  animation: traceshield-pulse 1.5s infinite;
+  animation: traceshield-pulse 2s infinite;
 }
 
 @keyframes traceshield-pulse {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.3); opacity: 1; }
-  100% { transform: scale(0.9); opacity: 0.7; }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
 }
 
+/* ─── Metrics Row ─── */
 .traceshield-metrics-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-top: 10px;
+  gap: 14px;
+  margin-top: 8px;
   flex-wrap: wrap;
 }
 
 .traceshield-score-badge {
   display: inline-flex;
   align-items: baseline;
-  gap: 3px;
+  gap: 2px;
   font-size: 20px;
-  font-weight: 800;
-  font-family: "JetBrains Mono", monospace, monospace;
+  font-weight: 700;
+  font-family: "SF Mono", "Consolas", monospace;
 }
 
 .traceshield-score-badge .score-max {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 500;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 400;
 }
 
 .traceshield-confidence-label {
-  font-size: 11px;
-  color: #94a3b8;
-  border-left: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  color: #6b7280;
+  border-left: 1px solid #e5e7eb;
   padding-left: 12px;
 }
 
+/* ─── Trigger Tags ─── */
 .traceshield-triggers-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+  gap: 5px;
+  margin-top: 8px;
 }
 
 .traceshield-trigger-tag {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-size: 11px;
   padding: 3px 8px;
-  border-radius: 5px;
-  background: rgba(239, 68, 68, 0.12);
-  color: #fca5a5;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
 }
 
 .traceshield-trigger-tag.tag-safe {
-  background: rgba(16, 185, 129, 0.1);
-  color: #6ee7b7;
-  border-color: rgba(16, 185, 129, 0.3);
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
 }
 
+/* ─── Actions Row ─── */
 .traceshield-actions-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #f3f4f6;
 }
 
 .traceshield-btn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 6px;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 5px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.15s ease;
+  transition: background 0.15s;
   border: none;
 }
 
-.traceshield-btn-primary {
-  background: #0284c7;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  color: #ffffff;
-  border: 1px solid rgba(56, 189, 248, 0.4);
-}
-
-.traceshield-btn-primary:hover {
-  background: #0369a1;
-  box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
-  color: #ffffff;
-}
-
 .traceshield-btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
-  color: #cbd5e1;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
 }
 
 .traceshield-btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #ffffff;
+  background: #e5e7eb;
 }
 
+/* ─── Details Pane ─── */
 .traceshield-details-pane {
-  margin-top: 12px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.25);
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #f9fafb;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  font-size: 11px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
 }
 
 .traceshield-grid-2 {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 8px;
 }
 
 .traceshield-field-label {
-  color: #64748b;
+  color: #6b7280;
   font-weight: 600;
   text-transform: uppercase;
   font-size: 10px;
-  margin-bottom: 2px;
+  letter-spacing: 0.3px;
+  margin-bottom: 1px;
 }
 
 .traceshield-field-val {
-  color: #f1f5f9;
-  font-family: "JetBrains Mono", monospace, monospace;
+  color: #1f2937;
+  font-family: "SF Mono", "Consolas", monospace;
+  font-size: 11px;
 }
