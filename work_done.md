@@ -532,3 +532,13 @@ Provides real-time, in-inbox security analysis directly inside Google Mail (Gmai
   * One-click "Rescan Active Gmail Message" button communicating with the active tab.
   * Fast ad-hoc threat inspector allowing users to paste arbitrary text, email headers, or URLs and evaluate threats immediately.
   * Inline mini results card with score gauge, calibrated confidence, trigger badges, and direct PDF download.
+
+### 14. UI/UX 3D Overhaul & Explainable AI (XAI)
+* **3D Cinematic Intro (IntroPage.jsx):** Added a responsive 3D CyberSphere landing experience using React-Three-Fiber.
+* **Holographic Threat Core (ScoreDashboard.jsx):** Replaced the 2D SVG risk gauge with a pulsing 3D reactor core.
+* **3D Cyber Globe (TraceMap.jsx):** Replaced the 2D Leaflet map with a high-fidelity 3D Earth model plotting attacker origin IPs.
+* **3D Forensic Topology (ReportViewer.jsx):** Interactive node-based 3D graph view to visualize transmission chains.
+* **Explainable AI (XAI):**
+  * **AI Executive Briefing:** Live typewriter effect and automatic threat keyword highlighting.
+  * **XAI Tooltips & Insights:** Dynamic plain-English translation panels for complex protocol failures (SPF/DKIM/DMARC) and header anomalies.
+* **Backend Infrastructure:** Installed CPU-optimized PyTorch to unlock the HuggingFace DistilBERT zero-shot classifier for true NLP analysis.

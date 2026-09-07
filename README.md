@@ -31,7 +31,7 @@ TraceShield Pipeline:
          │
          ├──► Module 5: Evidence PDF Report Generator (Jinja2 + HTML-to-PDF)          [⏳ In Progress]
          ├──► FastAPI REST API (`/analyze`, `/report`)                                 [⏳ In Progress]
-         ├──► Frontend React Dashboard & Leaflet.js TraceMap                          [⏳ In Progress]
+         ├──► Frontend React 3D Dashboard, Threat Core, and XAI Forensics              [✅ Complete]
          ├──► Module 6: Chrome Manifest V3 Browser Extension                          [⏳ In Progress]
          └──► Module 7: Adversarial Red-Teaming Self-Test Engine                      [⏳ In Progress]
 ```
@@ -46,7 +46,7 @@ TraceShield Pipeline:
 | **Module 4: Fusion Scoring** | [`backend/modules/fusion_scoring.py`](backend/modules/fusion_scoring.py) | ✅ Complete | Fully tested |
 | **Module 5: Evidence PDF Report** | [`backend/modules/report_generator.py`](backend/modules/report_generator.py) | ⏳ Next | Specification ready |
 | **FastAPI Backend Server** | [`backend/main.py`](backend/main.py) | ⏳ Next | Schema locked |
-| **Frontend React UI** | [`frontend/`](frontend/) | ⏳ Next | Folder scaffolded |
+| **Frontend React UI** | [`frontend/`](frontend/) | ✅ Complete | 3D Dashboard & XAI |
 | **Browser Extension** | [`extension/`](extension/) | ⏳ Next | Manifest scaffolded |
 | **Module 7: Adversarial Red-Team**| [`backend/modules/adversarial_test.py`](backend/modules/adversarial_test.py) | ⏳ Next | Specification ready |
 
