@@ -204,12 +204,34 @@ def _is_private_ip(ip: str) -> bool:
         return False
 
 
-def extract_origin_ip(relay_chain: list) -> str:
+def extract_origin_ip(relay_chain: list, msg: email.message.Message = None) -> str:
     """
-    Picks the most likely origin IP from the relay chain.
+    Picks the most likely origin IP from the relay chain or specific headers.
     The LAST entry in the parsed chain is the FIRST hop (earliest sender).
     We skip private/loopback IPs as they are internal relay hops.
     """
+    # 1. Check explicit originating IP headers first (used by Outlook, Yahoo, etc.)
+    if msg:
+        for header in ["X-Originating-IP", "X-Real-IP", "X-Forwarded-For"]:
+            val = msg.get(header)
+            if val:
+                # Extract first IPv4-like string
+                match = re.search(r"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})", val)
+                if match:
+                    ip = match.group(1)
+                    if not _is_private_ip(ip):
+                        return ip
+                # Extract first IPv6-like string
+                match_ipv6 = re.search(r"([0-9a-fA-F:]{7,39})", val)
+                if match_ipv6:
+                    try:
+                        ipaddress.IPv6Address(match_ipv6.group(1))
+                        if not _is_private_ip(match_ipv6.group(1)):
+                            return match_ipv6.group(1)
+                    except ValueError:
+                        pass
+
+    # 2. Fallback to extracting from the relay chain
     for hop in reversed(relay_chain):
         ip = hop.get("ip_address")
         if ip and not _is_private_ip(ip):
@@ -400,7 +422,7 @@ def analyze_headers(raw_email_bytes: bytes) -> dict:
     )
 
     relay_chain = parse_relay_chain(msg)
-    origin_ip = extract_origin_ip(relay_chain)
+    origin_ip = extract_origin_ip(relay_chain, msg)
 
     suspicious_attachments = check_suspicious_attachments(msg)
     attachment_hashes = extract_attachment_hashes(msg)

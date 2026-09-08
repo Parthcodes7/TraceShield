@@ -73,6 +73,20 @@
         </div>
       </section>
 
+      <!-- Settings -->
+      <section class="action-card">
+        <div class="card-header">
+          <span class="card-icon">⚙️</span>
+          <span class="card-title">Settings</span>
+        </div>
+        <p class="card-desc">Configure your SPOC (Single Point of Contact) email address to forward suspicious emails:</p>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <input type="email" id="spoc-email-input" class="text-input" placeholder="security@company.com" style="flex: 1; padding: 8px;" />
+          <button id="btn-save-spoc" class="btn btn-secondary">Save</button>
+        </div>
+        <div id="spoc-feedback" class="feedback-msg" style="margin-top: 4px;"></div>
+      </section>
+
       <!-- Footer -->
       <footer class="popup-footer">
         <span class="footer-version">TraceShield v2.1.0 — Local Engine</span>

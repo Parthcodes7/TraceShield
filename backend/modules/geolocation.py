@@ -103,4 +103,26 @@ def geolocate_ip(ip: str) -> dict:
         except Exception as e:
             logger.warning("GeoIP ASN Error for %s: %s", ip, e)
 
+    # 3. Fallback / Enhancement with Live API if city is unknown or coords are generic
+    if result["origin_city"] == "Unknown":
+        try:
+            import urllib.request
+            import json
+            req = urllib.request.Request(f"http://ip-api.com/json/{ip}", headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=3) as response:
+                api_resp = json.loads(response.read().decode())
+                
+            if api_resp.get("status") == "success":
+                result["origin_country"] = api_resp.get("country", result["origin_country"])
+                result["origin_city"] = api_resp.get("city", result["origin_city"])
+                if "lat" in api_resp and "lon" in api_resp:
+                    result["latitude"] = api_resp["lat"]
+                    result["longitude"] = api_resp["lon"]
+                if result["origin_isp"] == "Unknown":
+                    isp_name = api_resp.get("isp") or api_resp.get("org")
+                    result["origin_isp"] = isp_name or "Unknown"
+                    result["is_known_vpn_or_hosting"] = _is_known_hosting(isp_name)
+        except Exception as e:
+            logger.warning("Live IP API fallback error for %s: %s", ip, e)
+
     return result

@@ -176,6 +176,9 @@
         <button class="traceshield-btn traceshield-btn-secondary traceshield-toggle-details-btn" type="button">
           Forensic Details ▾
         </button>
+        <button class="traceshield-btn traceshield-btn-secondary traceshield-report-spoc-btn" type="button" style="color: #4f46e5; border-color: #c7d2fe; background: #eef2ff;">
+          Report to SPOC 🛡️
+        </button>
       </div>
 
       <div class="traceshield-details-pane" style="display: none;">
@@ -214,6 +217,34 @@
       const isHidden = detailsPane.style.display === 'none';
       detailsPane.style.display = isHidden ? 'block' : 'none';
       toggleBtn.innerText = isHidden ? 'Forensic Details ▴' : 'Forensic Details ▾';
+    });
+
+    // Wire up SPOC reporting
+    const reportSpocBtn = banner.querySelector('.traceshield-report-spoc-btn');
+    reportSpocBtn.addEventListener('click', () => {
+      try {
+        chrome.storage.local.get(['spocEmail'], (result) => {
+          const spoc = result.spocEmail || '';
+          if (!spoc) {
+            alert('Please configure your SPOC email address in the TraceShield extension popup first.');
+            return;
+          }
+          
+          // Prepare email data for reporting
+          const reportedSubject = encodeURIComponent(`[Suspicious Email Reported] ${analysisRecord.subject || 'No Subject'}`);
+          const bodyText = `I am reporting a suspicious email detected by TraceShield.\n\n` +
+                           `Risk Score: ${riskScore}/100 (${tierTitle})\n` +
+                           `Sender: ${sender.senderEmail || 'Unknown'}\n` +
+                           `Original Subject: ${analysisRecord.subject || 'No Subject'}\n\n` +
+                           `Signals detected:\n- ${allFlags.length > 0 ? allFlags.join('\\n- ') : 'None'}\n\n` +
+                           `Please review this email.`;
+          
+          const composeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(spoc)}&su=${reportedSubject}&body=${encodeURIComponent(bodyText)}`;
+          window.open(composeUrl, '_blank');
+        });
+      } catch (err) {
+        console.error('[TraceShield] Failed to open SPOC report window:', err);
+      }
     });
 
     // Insert before target

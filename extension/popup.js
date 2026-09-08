@@ -21,6 +21,11 @@
   const resTriggers = document.getElementById('res-triggers');
   const historyList = document.getElementById('history-list');
   const btnClearHistory = document.getElementById('btn-clear-history');
+  
+  // SPOC Settings
+  const spocEmailInput = document.getElementById('spoc-email-input');
+  const btnSaveSpoc = document.getElementById('btn-save-spoc');
+  const spocFeedback = document.getElementById('spoc-feedback');
 
   /**
    * Check if current tab is Gmail and content script is active.
@@ -253,6 +258,29 @@
   }
 
   /**
+   * Load SPOC Email from storage.
+   */
+  function loadSpocEmail() {
+    chrome.storage?.local?.get(['spocEmail'], (result) => {
+      if (result.spocEmail) {
+        spocEmailInput.value = result.spocEmail;
+      }
+    });
+  }
+
+  /**
+   * Save SPOC Email to storage.
+   */
+  function saveSpocEmail() {
+    const email = spocEmailInput.value.trim();
+    chrome.storage?.local?.set({ spocEmail: email }, () => {
+      spocFeedback.className = 'feedback-msg success';
+      spocFeedback.innerText = 'SPOC email saved!';
+      setTimeout(() => { spocFeedback.innerText = ''; }, 3000);
+    });
+  }
+
+  /**
    * Format timestamp as relative time.
    */
   function formatTimeAgo(isoStr) {
@@ -282,8 +310,10 @@
   btnScanTab.addEventListener('click', triggerTabScan);
   btnAnalyzeText.addEventListener('click', analyzeRawText);
   btnClearHistory.addEventListener('click', clearHistory);
+  btnSaveSpoc.addEventListener('click', saveSpocEmail);
 
   // ─── Initialize ───────────────────────────────────────────
   checkExtensionStatus();
   loadHistory();
+  loadSpocEmail();
 })();

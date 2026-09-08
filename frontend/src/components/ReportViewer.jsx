@@ -315,7 +315,7 @@ export default function ReportViewer({ record, onDownloadPdf, isDownloadingPdf }
 
           {/* XAI Insights Panel */}
           <div style={{
-            background: 'linear-gradient(145deg, rgba(16, 24, 39, 0.9) 0%, rgba(30, 20, 50, 0.9) 100%)',
+            background: 'linear-gradient(145deg, #f5f3ff 0%, #ede9fe 100%)',
             border: '1px solid rgba(139, 92, 246, 0.4)',
             borderRadius: 'var(--radius-lg)',
             padding: '16px 20px',
